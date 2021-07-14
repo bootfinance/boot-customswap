@@ -63,7 +63,14 @@ library SwapUtils {
         uint256 initialTime,
         uint256 futureTime
     );
+    event RampA2(
+        uint256 oldA2,
+        uint256 newA2,
+        uint256 initialTime,
+        uint256 futureTime
+    );
     event StopRampA(uint256 currentA, uint256 time);
+    event StopRampA2(uint256 currentA2, uint256 time);
 
     struct Swap {
         // variables around the ramp management of A,
@@ -73,6 +80,11 @@ library SwapUtils {
         uint256 futureA;
         uint256 initialATime;
         uint256 futureATime;
+        // A2 
+        uint256 initialA2;
+        uint256 futureA2;
+        uint256 initialA2Time;
+        uint256 futureA2Time;
         // fee calculation
         uint256 swapFee;
         uint256 adminFee;
@@ -194,6 +206,37 @@ library SwapUtils {
         if (block.timestamp < t1) {
             uint256 t0 = self.initialATime; // time when ramp is started
             uint256 a0 = self.initialA; // initial A value when ramp is started
+            if (a1 > a0) {
+                // a0 + (a1 - a0) * (block.timestamp - t0) / (t1 - t0)
+                return
+                    a0.add(
+                        a1.sub(a0).mul(block.timestamp.sub(t0)).div(t1.sub(t0))
+                    );
+            } else {
+                // a0 - (a0 - a1) * (block.timestamp - t0) / (t1 - t0)
+                return
+                    a0.sub(
+                        a0.sub(a1).mul(block.timestamp.sub(t0)).div(t1.sub(t0))
+                    );
+            }
+        } else {
+            return a1;
+        }
+    }
+
+    /**
+     * @notice Calculates and returns A2 based on the ramp settings
+     * @dev See the StableSwap paper for details
+     * @param self Swap struct to read from
+     * @return A2 parameter in its raw precision form
+     */
+    function _getA2Precise(Swap storage self) internal view returns (uint256) {
+        uint256 t1 = self.futureA2Time; // time when ramp is finished
+        uint256 a1 = self.futureA2; // final A2 value when ramp is finished
+
+        if (block.timestamp < t1) {
+            uint256 t0 = self.initialA2Time; // time when ramp is started
+            uint256 a0 = self.initialA2; // initial A2 value when ramp is started
             if (a1 > a0) {
                 // a0 + (a1 - a0) * (block.timestamp - t0) / (t1 - t0)
                 return
@@ -510,7 +553,7 @@ library SwapUtils {
     }
 
     /**
-     * @notice Calculate the new balances of the tokens given the indexes of the token
+     * @notice Y Custom: Calculate the new balances of the tokens given the indexes of the token
      * that is swapped from (FROM) and the token that is swapped to (TO).
      * This function is used as a helper function to calculate how much TO token
      * the user should receive on swap.
@@ -522,7 +565,7 @@ library SwapUtils {
      * @param xp balances of the tokens in the pool
      * @return the amount of TO token that should remain in the pool
      */
-    function getY(
+    function getYC(
         Swap storage self,
         uint8 tokenIndexFrom,
         uint8 tokenIndexTo,
@@ -538,6 +581,13 @@ library SwapUtils {
             tokenIndexFrom < numTokens && tokenIndexTo < numTokens,
             "Tokens must be in pool"
         );
+
+        bool firstA;
+        if( xp[0] < xp[1] ) {
+            firstA = true;
+        } else {
+            firstA = false;
+        }
 
         uint256 a = _getAPrecise(self);
         uint256 d = getD(xp, a);
@@ -566,14 +616,107 @@ library SwapUtils {
         uint256 y = d;
 
         // iterative approximation
+        uint256 xpNew0;
+        uint256 xpNew1;
+        uint256 a2 = _getA2Precise(self);
+
         for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
+            yPrev = y;
+            y = y.mul(y).add(c).div(y.mul(2).add(b).sub(d));
+            if (y.within1(yPrev)) {
+                // return y;
+                if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
+                    xpNew0 = _xp[0] + x;
+                    xpNew1 = _xp[1] - y;
+                    if (xpNew0 < xpNew1) {
+                        getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a)
+                    } else {
+                        getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2)
+                    }
+                } 
+                else if( tokenIndexFrom == 1 && tokenIndexTo == 0) {
+                    xpNew0 = _xp[0] - y;
+                    xpNew1 = _xp[1] + x;
+                    if (xpNew0 < xpNew1) {
+                        getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a)
+                    } else {
+                        getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2)
+                    }
+                }
+
+            }
+        }
+        revert("Approximation did not converge");
+    }
+
+
+    /**
+     * @notice Calculate the new balances of the tokens given the indexes of the token
+     * that is swapped from (FROM) and the token that is swapped to (TO).
+     * This function is used as a helper function to calculate how much TO token
+     * the user should receive on swap.
+     *
+     * @param self Swap struct to read from
+     * @param tokenIndexFrom index of FROM token
+     * @param tokenIndexTo index of TO token
+     * @param x the new total amount of FROM token
+     * @param xp balances of the tokens in the pool
+     * @param a balances of the tokens in the pool
+     * @return the amount of TO token that should remain in the pool
+     */
+    function getY(
+        Swap storage self,
+        uint8 tokenIndexFrom,
+        uint8 tokenIndexTo,
+        uint256 x,
+        uint256[] memory xp,
+        uint256 a
+    ) internal view returns (uint256) {
+        uint256 numTokens = self.pooledTokens.length;
+        require(
+            tokenIndexFrom != tokenIndexTo,
+            "Can't compare token to itself"
+        );
+        require(
+            tokenIndexFrom < numTokens && tokenIndexTo < numTokens,
+            "Tokens must be in pool"
+        );
+
+        // uint256 a = _getAPrecise(self);
+        uint256 d = getD(xp, a);
+        uint256 c = d;
+        uint256 s;
+        uint256 nA = numTokens.mul(a);
+
+        uint256 _x;
+        for (uint256 i = 0; i < numTokens; i++) {
+            if (i == tokenIndexFrom) {
+                _x = x;
+            } else if (i != tokenIndexTo) {
+                _x = xp[i];
+            } else {
+                continue;
+            }
+            s = s.add(_x);
+            c = c.mul(d).div(_x.mul(numTokens));
+            // If we were to protect the division loss we would have to keep the denominator separate
+            // and divide at the end. However this leads to overflow with large numTokens or/and D.
+            // c = c * D * D * D * ... overflow!
+        }
+        // c = c.mul(d).mul(A_PRECISION).div(nA.mul(numTokens));
+        // uint256 b = s.add(d.mul(A_PRECISION).div(nA));
+        // uint256 yPrev;
+        // uint256 y = d;
+
+        // iterative approximation
+/*        for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
             yPrev = y;
             y = y.mul(y).add(c).div(y.mul(2).add(b).sub(d));
             if (y.within1(yPrev)) {
                 return y;
             }
         }
-        revert("Approximation did not converge");
+*/        revert("Approximation did not converge");
     }
 
     /**
@@ -623,7 +766,7 @@ library SwapUtils {
             dx.mul(self.tokenPrecisionMultipliers[tokenIndexFrom]).add(
                 xp[tokenIndexFrom]
             );
-        uint256 y = getY(self, tokenIndexFrom, tokenIndexTo, x, xp);
+        uint256 y = getYC(self, tokenIndexFrom, tokenIndexTo, x, xp);
         dy = xp[tokenIndexTo].sub(y).sub(1);
         dyFee = dy.mul(self.swapFee).div(FEE_DENOMINATOR);
         dy = dy.sub(dyFee).div(self.tokenPrecisionMultipliers[tokenIndexTo]);
@@ -1276,6 +1419,60 @@ library SwapUtils {
     }
 
     /**
+     * @notice Start ramping up or down A2 parameter towards given futureA2_ and futureTime_
+     * Checks if the change is too rapid, and commits the new A value only when it falls under
+     * the limit range.
+     * @param self Swap struct to update
+     * @param futureA_ the new A2 to ramp towards
+     * @param futureTime_ timestamp when the new A2 should be reached
+     */
+    function rampA2(
+        Swap storage self,
+        uint256 futureA2_,
+        uint256 futureTime_
+    ) external {
+        require(
+            block.timestamp >= self.initialA2Time.add(1 days),
+            "Wait 1 day before starting ramp"
+        );
+        require(
+            futureTime_ >= block.timestamp.add(MIN_RAMP_TIME),
+            "Insufficient ramp time"
+        );
+        require(
+            futureA2_ > 0 && futureA2_ < MAX_A,
+            "futureA2_ must be > 0 and < MAX_A"
+        );
+
+        uint256 initialA2Precise = _getAPrecise(self);
+        uint256 futureA2Precise = futureA2_.mul(A_PRECISION);
+
+        if (futureA2Precise < initialA2Precise) {
+            require(
+                futureA2Precise.mul(MAX_A_CHANGE) >= initialAPrecise,
+                "futureA2_ is too small"
+            );
+        } else {
+            require(
+                futureA2Precise <= initialA2Precise.mul(MAX_A_CHANGE),
+                "futureA2_ is too large"
+            );
+        }
+
+        self.initialA2 = initialA2Precise;
+        self.futureA2 = futureA2Precise;
+        self.initialA2Time = block.timestamp;
+        self.futureA2Time = futureTime_;
+
+        emit RampA2(
+            initialA2Precise,
+            futureA2Precise,
+            block.timestamp,
+            futureTime_
+        );
+    }
+
+    /**
      * @notice Stops ramping A immediately. Once this function is called, rampA()
      * cannot be called for another 24 hours
      * @param self Swap struct to update
@@ -1290,5 +1487,22 @@ library SwapUtils {
         self.futureATime = block.timestamp;
 
         emit StopRampA(currentA, block.timestamp);
+    }
+
+    /**
+     * @notice Stops ramping A2 immediately. Once this function is called, rampA2()
+     * cannot be called for another 24 hours
+     * @param self Swap struct to update
+     */
+    function stopRampA2(Swap storage self) external {
+        require(self.futureATime > block.timestamp, "Ramp is already stopped");
+        uint256 currentA2 = _getAPrecise(self);
+
+        self.initialA2 = currentA2;
+        self.futureA2 = currentA2;
+        self.initialA2Time = block.timestamp;
+        self.futureA2Time = block.timestamp;
+
+        emit StopRampA2(currentA2, block.timestamp);
     }
 }
