@@ -626,8 +626,8 @@ library SwapUtils {
             if (y.within1(yPrev)) {
                 // return y;
                 if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
-                    xpNew0 = _xp[0] + x;
-                    xpNew1 = _xp[1] - y;
+                    xpNew0 = _xp[0].add(x);
+                    xpNew1 = _xp[1].sub(y);
                     if (xpNew0 < xpNew1) {
                         getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a)
                     } else {
@@ -635,8 +635,8 @@ library SwapUtils {
                     }
                 } 
                 else if( tokenIndexFrom == 1 && tokenIndexTo == 0) {
-                    xpNew0 = _xp[0] - y;
-                    xpNew1 = _xp[1] + x;
+                    xpNew0 = _xp[0].sub(y);
+                    xpNew1 = _xp[1].add(x);
                     if (xpNew0 < xpNew1) {
                         getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a)
                     } else {
