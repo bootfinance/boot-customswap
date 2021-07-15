@@ -95,7 +95,14 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         uint256 initialTime,
         uint256 futureTime
     );
+    event RampA2(
+        uint256 oldA2,
+        uint256 newA2,
+        uint256 initialA2Time,
+        uint256 futureA2Time
+    );
     event StopRampA(uint256 currentA, uint256 time);
+    event StopRampA2(uint256 currentA2, uint256 time);
 
     /**
      * @notice Deploys this Swap contract with given parameters as default
@@ -224,12 +231,30 @@ contract Swap is OwnerPausable, ReentrancyGuard {
     }
 
     /**
+     * @notice Return A2, the amplification coefficient * n * (n - 1)
+     * @dev See the StableSwap paper for details
+     * @return A2 parameter
+     */
+    function getA2() external view returns (uint256) {
+        return swapStorage.getA2();
+    }
+
+    /**
      * @notice Return A in its raw precision form
      * @dev See the StableSwap paper for details
      * @return A parameter in its raw precision form
      */
     function getAPrecise() external view returns (uint256) {
         return swapStorage.getAPrecise();
+    }
+
+    /**
+     * @notice Return A2 in its raw precision form
+     * @dev See the StableSwap paper for details
+     * @return A2 parameter in its raw precision form
+     */
+    function getA2Precise() external view returns (uint256) {
+        return swapStorage.getA2Precise();
     }
 
     /**
@@ -583,10 +608,28 @@ contract Swap is OwnerPausable, ReentrancyGuard {
     }
 
     /**
+     * @notice Start ramping up or down A2 parameter towards given futureA and futureTime
+     * Checks if the change is too rapid, and commits the new A value only when it falls under
+     * the limit range.
+     * @param futureA the new A2 to ramp towards
+     * @param futureTime timestamp when the new A2 should be reached
+     */
+    function rampA2(uint256 futureA, uint256 futureTime) external onlyOwner {
+        swapStorage.rampA2(futureA, futureTime);
+    }
+
+    /**
      * @notice Stop ramping A immediately. Reverts if ramp A is already stopped.
      */
     function stopRampA() external onlyOwner {
         swapStorage.stopRampA();
+    }
+
+    /**
+     * @notice Stop ramping A2 immediately. Reverts if ramp A2 is already stopped.
+     */
+    function stopRampA2() external onlyOwner {
+        swapStorage.stopRampA2();
     }
 
     // /**
