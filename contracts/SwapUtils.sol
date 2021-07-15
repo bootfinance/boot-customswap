@@ -621,6 +621,7 @@ library SwapUtils {
         }
 */
         uint256 a = _getAPrecise(self);
+        uint256 a2 = _getA2Precise(self);
         uint256 d = getD(xp, a);
         uint256 c = d;
         uint256 s;
@@ -647,17 +648,18 @@ library SwapUtils {
         uint256 y = d;
 
         // iterative approximation
-        uint256 xpNew0;
-        uint256 xpNew1;
-        uint256 a2 = _getA2Precise(self);
+        // uint256 xpNew0;
+        // uint256 xpNew1;
 
         uint256 yC;
         for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
             yPrev = y;
             y = y.mul(y).add(c).div(y.mul(2).add(b).sub(d));
             if (y.within1(yPrev)) {
+                yC = _xpCalc(self, tokenIndexFrom, tokenIndexTo, x, xp, y, a, a2);
+                return yC;
                 // return y;
-                if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
+/*                if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
                     xpNew0 = xp[0].add(x);
                     xpNew1 = xp[1].sub(y);
                     if (xpNew0 < xpNew1) {
@@ -677,12 +679,50 @@ library SwapUtils {
                     }
                     return yC;
                 }
-
+*/
             }
         }
 
 
         revert("Approximation did not converge");
+
+    }
+
+    function _xpCalc(
+        Swap storage self,
+        uint8 tokenIndexFrom,
+        uint8 tokenIndexTo,
+        uint256 x,
+        uint256[] memory xp,
+        uint256 y,
+        uint256 a,
+        uint256 a2
+        ) internal view returns (uint256) 
+    {
+        uint256 xpNew0;
+        uint256 xpNew1;
+        uint256 yC;      
+
+        if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
+            xpNew0 = xp[0].add(x);
+            xpNew1 = xp[1].sub(y);
+            if (xpNew0 < xpNew1) {
+                yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
+            } else {
+                yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
+            }
+            return yC;
+        } 
+        else if( tokenIndexFrom == 1 && tokenIndexTo == 0) {
+            xpNew0 = xp[0].sub(y);
+            xpNew1 = xp[1].add(x);
+            if (xpNew0 < xpNew1) {
+                yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
+            } else {
+                yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
+            }
+            return yC;
+        }
 
     }
 
