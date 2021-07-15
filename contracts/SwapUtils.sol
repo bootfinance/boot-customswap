@@ -652,12 +652,13 @@ library SwapUtils {
         // uint256 xpNew1;
 
         uint256 yC;
+        uint256 yF;
         for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
             yPrev = y;
             y = y.mul(y).add(c).div(y.mul(2).add(b).sub(d));
             if (y.within1(yPrev)) {
-                yC = _xpCalc(self, tokenIndexFrom, tokenIndexTo, x, xp, y, a, a2);
-                return yC;
+                // yC = _xpCalc(self, tokenIndexFrom, tokenIndexTo, x, xp, y, a, a2);
+                // return yC;
                 // return y;
 /*                if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
                     xpNew0 = xp[0].add(x);
@@ -679,7 +680,16 @@ library SwapUtils {
                     }
                     return yC;
                 }
+
 */
+                yC = _xpCalc(tokenIndexFrom, tokenIndexTo, x, xp, y);
+                if (yC == 0){
+                    yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
+                }
+                else if (yC == 1){
+                    yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
+                }
+                return yF;
             }
         }
 
@@ -688,15 +698,13 @@ library SwapUtils {
 
     }
 
+
     function _xpCalc(
-        Swap storage self,
         uint8 tokenIndexFrom,
         uint8 tokenIndexTo,
         uint256 x,
         uint256[] memory xp,
-        uint256 y,
-        uint256 a,
-        uint256 a2
+        uint256 y
         ) internal view returns (uint256) 
     {
         uint256 xpNew0;
@@ -707,9 +715,9 @@ library SwapUtils {
             xpNew0 = xp[0].add(x);
             xpNew1 = xp[1].sub(y);
             if (xpNew0 < xpNew1) {
-                yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
+                yC = 0;
             } else {
-                yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
+                yC = 1;
             }
             return yC;
         } 
@@ -717,9 +725,9 @@ library SwapUtils {
             xpNew0 = xp[0].sub(y);
             xpNew1 = xp[1].add(x);
             if (xpNew0 < xpNew1) {
-                yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
+                yC = 0;
             } else {
-                yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
+                yC = 1;
             }
             return yC;
         }
