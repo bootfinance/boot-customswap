@@ -1,5 +1,5 @@
-import { Allowlist } from "../../build/typechain/Allowlist"
-import AllowlistArtifact from "../../build/artifacts/contracts/Allowlist.sol/Allowlist.json"
+// import { Allowlist } from "../../build/typechain/Allowlist"
+// import AllowlistArtifact from "../../build/artifacts/contracts/Allowlist.sol/Allowlist.json"
 import { BigNumber } from "@ethersproject/bignumber"
 import { GenericERC20 } from "../../build/typechain/GenericErc20"
 import GenericERC20Artifact from "../../build/artifacts/contracts/helper/GenericERC20.sol/GenericERC20.json"
@@ -13,7 +13,7 @@ import { Wallet } from "ethers"
 import { deployContract } from "ethereum-waffle"
 import { asyncForEach, deployContractWithLibraries } from "../../test/testUtils"
 import { ethers } from "hardhat"
-import merkleTreeData from "../../test/exampleMerkleTree.json"
+// import merkleTreeData from "../../test/exampleMerkleTree.json"
 
 // Test Values
 const INITIAL_A_VALUE = 50
@@ -119,12 +119,13 @@ async function deploySwap(): Promise<void> {
   })
 
   // Deploy Allowlist
-  const allowlist = (await deployContract(
+/*  const allowlist = (await deployContract(
     (signers[0] as unknown) as Wallet,
     AllowlistArtifact,
     [merkleTreeData.merkleRoot],
   )) as Allowlist
   await allowlist.deployed()
+*/
 
   // Deploy MathUtils
   const mathUtils = (await deployContract(
@@ -161,8 +162,8 @@ async function deploySwap(): Promise<void> {
       INITIAL_A_VALUE,
       SWAP_FEE,
       ADMIN_FEE,
-      WITHDRAW_FEE,
-      allowlist.address,
+      WITHDRAW_FEE/*,
+      allowlist.address,*/
     ],
   )) as Swap
   await stablecoinSwap.deployed()
@@ -184,13 +185,13 @@ async function deploySwap(): Promise<void> {
       INITIAL_A_VALUE,
       SWAP_FEE,
       ADMIN_FEE,
-      WITHDRAW_FEE,
-      allowlist.address,
+      WITHDRAW_FEE/*,
+      allowlist.address,*/
     ],
   )) as Swap
   await btcSwap.deployed()
 
-  // update dev limits for stableSwap
+/*  // update dev limits for stableSwap
   await allowlist.setPoolCap(
     stablecoinSwap.address,
     BigNumber.from(10).pow(18).mul(1000),
@@ -209,7 +210,7 @@ async function deploySwap(): Promise<void> {
     btcSwap.address,
     BigNumber.from(10).pow(18).mul(1000),
   )
-
+*/
   await stablecoinSwap.deployed()
   const stablecoinLpToken = (await stablecoinSwap.swapStorage()).lpToken
   await btcSwap.deployed()

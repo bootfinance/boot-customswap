@@ -3,13 +3,13 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "./IAllowlist.sol";
+// import "./IAllowlist.sol";
 
 interface ISwap {
     // pool data view functions
     function getA() external view returns (uint256);
 
-    function getAllowlist() external view returns (IAllowlist);
+    // function getAllowlist() external view returns (IAllowlist);
 
     function getToken(uint8 index) external view returns (IERC20);
 

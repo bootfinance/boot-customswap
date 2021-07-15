@@ -225,6 +225,36 @@ library SwapUtils {
     }
 
     /**
+     * @notice Return A2, the amplification coefficient * n * (n - 1)
+     * @dev See the StableSwap paper for details
+     * @param self Swap struct to read from
+     * @return A2 parameter
+     */
+    function getA2(Swap storage self) external view returns (uint256) {
+        return _getA2(self);
+    }
+
+    /**
+     * @notice Return A2, the amplification coefficient * n * (n - 1)
+     * @dev See the StableSwap paper for details
+     * @param self Swap struct to read from
+     * @return A2 parameter
+     */
+    function _getA2(Swap storage self) internal view returns (uint256) {
+        return _getA2Precise(self).div(A_PRECISION);
+    }
+
+    /**
+     * @notice Return A2 in its raw precision
+     * @dev See the StableSwap paper for details
+     * @param self Swap struct to read from
+     * @return A2 parameter in its raw precision form
+     */
+    function getA2Precise(Swap storage self) external view returns (uint256) {
+        return _getA2Precise(self);
+    }
+
+    /**
      * @notice Calculates and returns A2 based on the ramp settings
      * @dev See the StableSwap paper for details
      * @param self Swap struct to read from
@@ -628,8 +658,8 @@ library SwapUtils {
             if (y.within1(yPrev)) {
                 // return y;
                 if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
-                    xpNew0 = _xp[0].add(x);
-                    xpNew1 = _xp[1].sub(y);
+                    xpNew0 = xp[0].add(x);
+                    xpNew1 = xp[1].sub(y);
                     if (xpNew0 < xpNew1) {
                         yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
                     } else {
@@ -638,8 +668,8 @@ library SwapUtils {
                     return yC;
                 } 
                 else if( tokenIndexFrom == 1 && tokenIndexTo == 0) {
-                    xpNew0 = _xp[0].sub(y);
-                    xpNew1 = _xp[1].add(x);
+                    xpNew0 = xp[0].sub(y);
+                    xpNew1 = xp[1].add(x);
                     if (xpNew0 < xpNew1) {
                         yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
                     } else {
@@ -1430,7 +1460,7 @@ library SwapUtils {
      * Checks if the change is too rapid, and commits the new A value only when it falls under
      * the limit range.
      * @param self Swap struct to update
-     * @param futureA_ the new A2 to ramp towards
+     * @param futureA2_ the new A2 to ramp towards
      * @param futureTime_ timestamp when the new A2 should be reached
      */
     function rampA2(
