@@ -66,8 +66,8 @@ library SwapUtils {
     event RampA2(
         uint256 oldA2,
         uint256 newA2,
-        uint256 initialTime,
-        uint256 futureTime
+        uint256 initialA2Time,
+        uint256 futureA2Time
     );
     event StopRampA(uint256 currentA, uint256 time);
     event StopRampA2(uint256 currentA2, uint256 time);
@@ -582,13 +582,14 @@ library SwapUtils {
             "Tokens must be in pool"
         );
 
+/*      
         bool firstA;
         if( xp[0] < xp[1] ) {
             firstA = true;
         } else {
             firstA = false;
         }
-
+*/
         uint256 a = _getAPrecise(self);
         uint256 d = getD(xp, a);
         uint256 c = d;
@@ -620,6 +621,7 @@ library SwapUtils {
         uint256 xpNew1;
         uint256 a2 = _getA2Precise(self);
 
+        uint256 yC;
         for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
             yPrev = y;
             y = y.mul(y).add(c).div(y.mul(2).add(b).sub(d));
@@ -629,24 +631,29 @@ library SwapUtils {
                     xpNew0 = _xp[0].add(x);
                     xpNew1 = _xp[1].sub(y);
                     if (xpNew0 < xpNew1) {
-                        getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a)
+                        yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
                     } else {
-                        getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2)
+                        yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
                     }
+                    return yC;
                 } 
                 else if( tokenIndexFrom == 1 && tokenIndexTo == 0) {
                     xpNew0 = _xp[0].sub(y);
                     xpNew1 = _xp[1].add(x);
                     if (xpNew0 < xpNew1) {
-                        getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a)
+                        yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
                     } else {
-                        getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2)
+                        yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
                     }
+                    return yC;
                 }
 
             }
         }
+
+
         revert("Approximation did not converge");
+
     }
 
 
@@ -661,7 +668,7 @@ library SwapUtils {
      * @param tokenIndexTo index of TO token
      * @param x the new total amount of FROM token
      * @param xp balances of the tokens in the pool
-     * @param a balances of the tokens in the pool
+     * @param a amplification coefficient
      * @return the amount of TO token that should remain in the pool
      */
     function getY(
@@ -703,20 +710,20 @@ library SwapUtils {
             // and divide at the end. However this leads to overflow with large numTokens or/and D.
             // c = c * D * D * D * ... overflow!
         }
-        // c = c.mul(d).mul(A_PRECISION).div(nA.mul(numTokens));
-        // uint256 b = s.add(d.mul(A_PRECISION).div(nA));
-        // uint256 yPrev;
-        // uint256 y = d;
+        c = c.mul(d).mul(A_PRECISION).div(nA.mul(numTokens));
+        uint256 b = s.add(d.mul(A_PRECISION).div(nA));
+        uint256 yPrev;
+        uint256 y = d;
 
         // iterative approximation
-/*        for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
+        for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
             yPrev = y;
             y = y.mul(y).add(c).div(y.mul(2).add(b).sub(d));
             if (y.within1(yPrev)) {
                 return y;
             }
         }
-*/        revert("Approximation did not converge");
+        revert("Approximation did not converge");
     }
 
     /**
@@ -1444,12 +1451,12 @@ library SwapUtils {
             "futureA2_ must be > 0 and < MAX_A"
         );
 
-        uint256 initialA2Precise = _getAPrecise(self);
+        uint256 initialA2Precise = _getA2Precise(self);
         uint256 futureA2Precise = futureA2_.mul(A_PRECISION);
 
         if (futureA2Precise < initialA2Precise) {
             require(
-                futureA2Precise.mul(MAX_A_CHANGE) >= initialAPrecise,
+                futureA2Precise.mul(MAX_A_CHANGE) >= initialA2Precise,
                 "futureA2_ is too small"
             );
         } else {
@@ -1495,8 +1502,8 @@ library SwapUtils {
      * @param self Swap struct to update
      */
     function stopRampA2(Swap storage self) external {
-        require(self.futureATime > block.timestamp, "Ramp is already stopped");
-        uint256 currentA2 = _getAPrecise(self);
+        require(self.futureA2Time > block.timestamp, "Ramp is already stopped");
+        uint256 currentA2 = _getA2Precise(self);
 
         self.initialA2 = currentA2;
         self.futureA2 = currentA2;
