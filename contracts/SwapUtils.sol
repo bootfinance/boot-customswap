@@ -612,16 +612,21 @@ library SwapUtils {
             "Tokens must be in pool"
         );
 
-/*      
-        bool firstA;
+      
+        // bool firstA;
+
+        uint256 a;
+
+        // 1. Determine the correct A by comparing xp[0] and xp[1].
         if( xp[0] < xp[1] ) {
-            firstA = true;
+            a = _getAPrecise(self);
         } else {
-            firstA = false;
+            a = _getA2Precise(self);        
         }
-*/
-        uint256 a = _getAPrecise(self);
-        uint256 a2 = _getA2Precise(self);
+
+        // uint256 a2 = _getA2Precise(self);
+
+        // 2. Calculate starting D.
         uint256 d = getD(xp, a);
         uint256 c = d;
         uint256 s;
@@ -645,6 +650,7 @@ library SwapUtils {
         c = c.mul(d).mul(A_PRECISION).div(nA.mul(numTokens));
         uint256 b = s.add(d.mul(A_PRECISION).div(nA));
         uint256 yPrev;
+        // 3. Calculate y given A and D
         uint256 y = d;
 
         // iterative approximation
@@ -653,9 +659,10 @@ library SwapUtils {
 
         uint256 yC;
         uint256 yF;
+        uint256 aNew;
         for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
             yPrev = y;
-            y = y.mul(y).add(c).div(y.mul(2).add(b).sub(d));
+            y = y.mul(y).add(c).div(y.mul(2).add(b).sub(getD(xp, a)));
             if (y.within1(yPrev)) {
                 // yC = _xpCalc(self, tokenIndexFrom, tokenIndexTo, x, xp, y, a, a2);
                 // return yC;
@@ -682,14 +689,21 @@ library SwapUtils {
                 }
 
 */
-                yC = _xpCalc(tokenIndexFrom, tokenIndexTo, x, xp, y);
-                if (yC == 0){
-                    yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
+                aNew, yC = _xpCalc(tokenIndexFrom, tokenIndexTo, x, xp, y);
+
+                // 6. If A changed, calculate y again given A' and D
+                if (aNew != a){
+                    a = aNew;
+                    continue;
+                } else {
+                    if (yC == 0){
+                        yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
+                    }
+                    else if (yC == 1){
+                        yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
+                    }
+                    return yF;
                 }
-                else if (yC == 1){
-                    yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
-                }
-                return yF;
             }
         }
 
@@ -705,32 +719,49 @@ library SwapUtils {
         uint256 x,
         uint256[] memory xp,
         uint256 y
-        ) internal view returns (uint256) 
+        ) internal view returns (uint256, uint256) 
     {
         uint256 xpNew0;
         uint256 xpNew1;
-        uint256 yC;      
+        uint256 yC; 
+        uint256 aNew;    
 
+        // 4. Calculate xp2, being the the balances after the trade
         if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
             xpNew0 = xp[0].add(x);
             xpNew1 = xp[1].sub(y);
-            if (xpNew0 < xpNew1) {
-                yC = 0;
-            } else {
-                yC = 1;
-            }
-            return yC;
+            // if (xpNew0 < xpNew1) {
+            //     aNew = _getAPrecise(self);
+            //     yC = 0;
+            // } else {
+            //     aNew = _getA2Precise(self);
+            //     yC = 1;
+            // }
+            // return yC;
         } 
         else if( tokenIndexFrom == 1 && tokenIndexTo == 0) {
             xpNew0 = xp[0].sub(y);
             xpNew1 = xp[1].add(x);
-            if (xpNew0 < xpNew1) {
-                yC = 0;
-            } else {
-                yC = 1;
-            }
-            return yC;
+            // if (xpNew0 < xpNew1) {
+            //     aNew = _getAPrecise(self);
+            //     yC = 0;
+            // } else {
+            //     aNew = _getA2Precise(self);
+            //     yC = 1;
+            // }
+            // return yC;
         }
+
+        // 5. Compare xp2[0] and xp2[1] and determine the target A
+        if (xpNew0 < xpNew1) {
+            aNew = _getAPrecise(self);
+            yC = 0;
+        } else {
+            aNew = _getA2Precise(self);
+            yC = 1;
+        }
+        return aNew, yC;
+        
 
     }
 
