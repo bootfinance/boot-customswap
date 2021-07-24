@@ -612,9 +612,6 @@ library SwapUtils {
             "Tokens must be in pool"
         );
 
-      
-        // bool firstA;
-
         uint256 a;
 
         // 1. Determine the correct A by comparing xp[0] and xp[1].
@@ -626,7 +623,7 @@ library SwapUtils {
 
         // uint256 a2 = _getA2Precise(self);
 
-        // 2. Calculate starting D.
+        // 2. Calculate D of the initial position
         uint256 d = getD(xp, a);
         uint256 c = d;
         uint256 s;
@@ -662,7 +659,7 @@ library SwapUtils {
         uint256 aNew;
         for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
             yPrev = y;
-            y = y.mul(y).add(c).div(y.mul(2).add(b).sub(getD(xp, a)));
+            y = y.mul(y).add(c).div(y.mul(2).add(b).sub(d));
             if (y.within1(yPrev)) {
                 // yC = _xpCalc(self, tokenIndexFrom, tokenIndexTo, x, xp, y, a, a2);
                 // return yC;
@@ -689,20 +686,22 @@ library SwapUtils {
                 }
 
 */
-                aNew, yC = _xpCalc(tokenIndexFrom, tokenIndexTo, x, xp, y);
+                // Calculate A at the resulting position
+                aNew/*, yC*/ = _xpCalc(tokenIndexFrom, tokenIndexTo, x, xp, y);
 
                 // 6. If A changed, calculate y again given A' and D
-                if (aNew != a){
-                    a = aNew;
-                    continue;
-                } else {
-                    if (yC == 0){
-                        yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
-                    }
-                    else if (yC == 1){
-                        yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
-                    }
-                    return yF;
+                // Check if we switched A's during the swap
+                if (aNew == a){     // We have used the correct A
+                    return y;
+
+                } else {    // We have switched A's, do it again with the new A
+                    // if (yC == 0){
+                    //     yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
+                    // }
+                    // else if (yC == 1){
+                    //     yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
+                    // }
+                    return getY(self, tokenIndexFrom, tokenIndexTo, x, xp, aNew);
                 }
             }
         }
@@ -728,8 +727,8 @@ library SwapUtils {
 
         // 4. Calculate xp2, being the the balances after the trade
         if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
-            xpNew0 = xp[0].add(x);
-            xpNew1 = xp[1].sub(y);
+            xpNew0 = x;
+            xpNew1 = y;
             // if (xpNew0 < xpNew1) {
             //     aNew = _getAPrecise(self);
             //     yC = 0;
@@ -740,8 +739,8 @@ library SwapUtils {
             // return yC;
         } 
         else if( tokenIndexFrom == 1 && tokenIndexTo == 0) {
-            xpNew0 = xp[0].sub(y);
-            xpNew1 = xp[1].add(x);
+            xpNew0 = y;
+            xpNew1 = x;
             // if (xpNew0 < xpNew1) {
             //     aNew = _getAPrecise(self);
             //     yC = 0;
@@ -755,12 +754,12 @@ library SwapUtils {
         // 5. Compare xp2[0] and xp2[1] and determine the target A
         if (xpNew0 < xpNew1) {
             aNew = _getAPrecise(self);
-            yC = 0;
+            // yC = 0;
         } else {
             aNew = _getA2Precise(self);
-            yC = 1;
+            // yC = 1;
         }
-        return aNew, yC;
+        return aNew/*, yC*/;
         
 
     }
