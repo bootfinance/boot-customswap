@@ -358,7 +358,8 @@ library SwapUtils {
         uint256[] memory xp = _xp(self);
         CalculateWithdrawOneTokenDYInfo memory v =
             CalculateWithdrawOneTokenDYInfo(0, 0, 0, 0, 0);
-        v.preciseA = _getAPrecise(self);
+        v.preciseA = determineA(self, xp);
+        // calculate D based on correct A
         v.d0 = getD(xp, v.preciseA);
         v.d1 = v.d0.sub(tokenAmount.mul(v.d0).div(self.lpToken.totalSupply()));
 
@@ -506,7 +507,8 @@ library SwapUtils {
      * @return The invariant, at the precision of the pool
      */
     function getD(Swap storage self) internal view returns (uint256) {
-        return getD(_xp(self), _getAPrecise(self));
+        uint256 a = determineA(self, _xp(self));            // determine the correct A
+        return getD(_xp(self), a);
     }
 
     /**
@@ -564,6 +566,27 @@ library SwapUtils {
     }
 
     /**
+     * @notice determine correct A whether in A1 or A2 region in customswap
+     * @param self Swap struct to read from
+     * @return a, the amplification coefficient
+     */
+    function determineA(
+        Swap storage self, 
+        uint256[] memory xp)
+        external
+        view
+        returns(uint256)
+    {
+        // Determine the correct A by comparing xp[0] and xp[1].
+        // determine if currently in the A region or in the A2 region.
+        if( xp[0] < xp[1] ) {
+            return _getAPrecise(self);
+        } else {
+            return _getA2Precise(self);        
+        }
+    }
+
+    /**
      * @notice Get the virtual price, to help calculate profit
      * @param self Swap struct to read from
      * @return the virtual price, scaled to precision of POOL_PRECISION_DECIMALS
@@ -573,7 +596,10 @@ library SwapUtils {
         view
         returns (uint256)
     {
-        uint256 d = getD(_xp(self), _getAPrecise(self));
+        uint256 a = determineA(self, _xp(self));
+
+        // Calculate D based on correct A
+        uint256 d = getD(_xp(self), a);
         uint256 supply = self.lpToken.totalSupply();
         if (supply > 0) {
             return
@@ -620,8 +646,6 @@ library SwapUtils {
         } else {
             a = _getA2Precise(self);        
         }
-
-        // uint256 a2 = _getA2Precise(self);
 
         // 2. Calculate D of the initial position
         uint256 d = getD(xp, a);
@@ -980,8 +1004,8 @@ library SwapUtils {
         bool deposit
     ) external view returns (uint256) {
         uint256 numTokens = self.pooledTokens.length;
-        uint256 a = _getAPrecise(self);
-        uint256 d0 = getD(_xp(self, self.balances), a);
+        // Calculate D based on correct A
+        uint256 d0 = getD(_xp(self, self.balances), determineA(self, _xp(self, self.balances)));
         uint256[] memory balances1 = self.balances;
         for (uint256 i = 0; i < numTokens; i++) {
             if (deposit) {
@@ -993,7 +1017,8 @@ library SwapUtils {
                 );
             }
         }
-        uint256 d1 = getD(_xp(self, balances1), a);
+        // Calculate D based on correct A
+        uint256 d1 = getD(_xp(self, balances1), determineA(self, _xp(self, balances1)));
         uint256 totalSupply = self.lpToken.totalSupply();
 
         if (deposit) {
@@ -1162,7 +1187,8 @@ library SwapUtils {
         }
 
         // invariant after change
-        v.preciseA = _getAPrecise(self);
+        v.preciseA = determineA(self, _xp(self, newBalances));
+        // calculate D based on correct A
         v.d1 = getD(_xp(self, newBalances), v.preciseA);
         require(v.d1 > v.d0, "D should increase");
 
@@ -1180,7 +1206,8 @@ library SwapUtils {
                 );
                 newBalances[i] = newBalances[i].sub(fees[i]);
             }
-            v.d2 = getD(_xp(self, newBalances), v.preciseA);
+            // calculate D based on correct A
+            v.d2 = getD(_xp(self, newBalances), determineA(self, _xp(self, newBalances)));
         } else {
             // the initial depositor doesn't pay fees
             self.balances = newBalances;
@@ -1375,7 +1402,7 @@ library SwapUtils {
 
         uint256[] memory balances1 = self.balances;
 
-        v.preciseA = _getAPrecise(self);
+        v.preciseA = determineA(self, _xp(self));
         v.d0 = getD(_xp(self), v.preciseA);
         for (uint256 i = 0; i < self.pooledTokens.length; i++) {
             balances1[i] = balances1[i].sub(
@@ -1383,7 +1410,7 @@ library SwapUtils {
                 "Cannot withdraw more than available"
             );
         }
-        v.d1 = getD(_xp(self, balances1), v.preciseA);
+        v.d1 = getD(_xp(self, balances1), determineA(self, _xp(self, balances1)));
         uint256[] memory fees = new uint256[](self.pooledTokens.length);
 
         for (uint256 i = 0; i < self.pooledTokens.length; i++) {
@@ -1396,7 +1423,7 @@ library SwapUtils {
             balances1[i] = balances1[i].sub(fees[i]);
         }
 
-        v.d2 = getD(_xp(self, balances1), v.preciseA);
+        v.d2 = getD(_xp(self, balances1), determineA(self, _xp(self, balances1)));
 
         uint256 tokenAmount = v.d0.sub(v.d2).mul(tokenSupply).div(v.d0);
         require(tokenAmount != 0, "Burnt amount cannot be zero");
