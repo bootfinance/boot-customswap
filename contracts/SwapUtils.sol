@@ -430,7 +430,7 @@ library SwapUtils {
         // Calculate A at the resulting position
         // tokenIndex can be either 0 or 1, and the second parameter should be the other one.
         // x should be the amount of token at that spot in the xp, so xp[1-tokenIndex]
-        aNew = _xpCalc(self, 1-tokenIndex, tokenIndex, xp[1-tokenIndex], y);
+        uint256 aNew = _xpCalc(self, 1-tokenIndex, tokenIndex, xp[1-tokenIndex], y);
 
         // Check if we switched A's during the swap
         if (aNew == a){     // We have used the correct A
@@ -619,7 +619,7 @@ library SwapUtils {
     function determineA(
         Swap storage self, 
         uint256[] memory xp)
-        external
+        internal
         view
         returns(uint256)
     {
@@ -694,7 +694,7 @@ library SwapUtils {
         uint256 y = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a, d);
 
         // 4. Calculate A at the resulting position
-        aNew = _xpCalc(self, tokenIndexFrom, tokenIndexTo, x, y);
+        uint256 aNew = _xpCalc(self, tokenIndexFrom, tokenIndexTo, x, y);
 
         // 5. Check if we switched A's during the swap
         if (aNew == a){     // We have used the correct A
