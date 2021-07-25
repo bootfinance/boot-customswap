@@ -365,7 +365,7 @@ library SwapUtils {
 
         require(tokenAmount <= xp[tokenIndex], "Withdraw exceeds available");
 
-        v.newY = getYD(v.preciseA, tokenIndex, xp, v.d1);
+        v.newY = getYDC(self, v.preciseA, tokenIndex, xp, v.d1);
 
         uint256[] memory xpReduced = new uint256[](xp.length);
 
@@ -388,11 +388,57 @@ library SwapUtils {
 
         uint256 dy =
             xpReduced[tokenIndex].sub(
-                getYD(v.preciseA, tokenIndex, xpReduced, v.d1)
+                getYDC(self, determineA(self, xpReduced), tokenIndex, xpReduced, v.d1)
             );
         dy = dy.sub(1).div(self.tokenPrecisionMultipliers[tokenIndex]);
 
         return (dy, v.newY);
+    }
+
+    /**
+     * @notice Calculate the price of a token in the pool with given
+     * precision-adjusted balances and a particular D.
+     *
+     * @dev This is accomplished via solving the invariant iteratively.
+     * See the StableSwap paper and Curve.fi implementation for further details.
+     *
+     * x_1**2 + x1 * (sum' - (A*n**n - 1) * D / (A * n**n)) = D ** (n + 1) / (n ** (2 * n) * prod' * A)
+     * x_1**2 + b*x_1 = c
+     * x_1 = (x_1**2 + c) / (2*x_1 + b)
+     *
+     * @param self Swap struct to read from
+     * @param a the amplification coefficient * n * (n - 1). See the StableSwap paper for details.
+     * @param tokenIndex Index of token we are calculating for.
+     * @param xp a precision-adjusted set of pool balances. Array should be
+     * the same cardinality as the pool.
+     * @param d the stableswap invariant
+     * @return the price of the token, in the same precision as in xp
+     */
+    function getYDC(
+        Swap storage self,
+        uint256 a,
+        uint8 tokenIndex,
+        uint256[] memory xp,
+        uint256 d
+    ) internal view returns (uint256) {
+        uint256 numTokens = xp.length;
+        require(tokenIndex < numTokens, "Token not found");
+
+        // calculate y
+        uint256 y = getYD(a, tokenIndex, xp, d);
+
+        // Calculate A at the resulting position
+        // tokenIndex can be either 0 or 1, and the second parameter should be the other one.
+        // x should be the amount of token at that spot in the xp, so xp[1-tokenIndex]
+        aNew = _xpCalc(self, 1-tokenIndex, tokenIndex, xp[1-tokenIndex], y);
+
+        // Check if we switched A's during the swap
+        if (aNew == a){     // We have used the correct A
+            return y;
+        } else {    // We have switched A's, do it again with the new A
+            return getYD(aNew, tokenIndex, xp, d);
+        }
+
     }
 
     /**
@@ -638,154 +684,65 @@ library SwapUtils {
             "Tokens must be in pool"
         );
 
-        uint256 a;
-
         // 1. Determine the correct A by comparing xp[0] and xp[1].
-        if( xp[0] < xp[1] ) {
-            a = _getAPrecise(self);
-        } else {
-            a = _getA2Precise(self);        
-        }
+        uint256 a = determineA(self, xp);
 
         // 2. Calculate D of the initial position
         uint256 d = getD(xp, a);
-        uint256 c = d;
-        uint256 s;
-        uint256 nA = numTokens.mul(a);
 
-        uint256 _x;
-        for (uint256 i = 0; i < numTokens; i++) {
-            if (i == tokenIndexFrom) {
-                _x = x;
-            } else if (i != tokenIndexTo) {
-                _x = xp[i];
-            } else {
-                continue;
-            }
-            s = s.add(_x);
-            c = c.mul(d).div(_x.mul(numTokens));
-            // If we were to protect the division loss we would have to keep the denominator separate
-            // and divide at the end. However this leads to overflow with large numTokens or/and D.
-            // c = c * D * D * D * ... overflow!
+        // 3. calculate y
+        uint256 y = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a, d);
+
+        // 4. Calculate A at the resulting position
+        aNew = _xpCalc(self, tokenIndexFrom, tokenIndexTo, x, y);
+
+        // 5. Check if we switched A's during the swap
+        if (aNew == a){     // We have used the correct A
+            return y;
+        } else {    // We have switched A's, do it again with the new A
+            return getY(self, tokenIndexFrom, tokenIndexTo, x, xp, aNew, d);
         }
-        c = c.mul(d).mul(A_PRECISION).div(nA.mul(numTokens));
-        uint256 b = s.add(d.mul(A_PRECISION).div(nA));
-        uint256 yPrev;
-        // 3. Calculate y given A and D
-        uint256 y = d;
-
-        // iterative approximation
-        // uint256 xpNew0;
-        // uint256 xpNew1;
-
-        uint256 yC;
-        uint256 yF;
-        uint256 aNew;
-        for (uint256 i = 0; i < MAX_LOOP_LIMIT; i++) {
-            yPrev = y;
-            y = y.mul(y).add(c).div(y.mul(2).add(b).sub(d));
-            if (y.within1(yPrev)) {
-                // yC = _xpCalc(self, tokenIndexFrom, tokenIndexTo, x, xp, y, a, a2);
-                // return yC;
-                // return y;
-/*                if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
-                    xpNew0 = xp[0].add(x);
-                    xpNew1 = xp[1].sub(y);
-                    if (xpNew0 < xpNew1) {
-                        yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
-                    } else {
-                        yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
-                    }
-                    return yC;
-                } 
-                else if( tokenIndexFrom == 1 && tokenIndexTo == 0) {
-                    xpNew0 = xp[0].sub(y);
-                    xpNew1 = xp[1].add(x);
-                    if (xpNew0 < xpNew1) {
-                        yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
-                    } else {
-                        yC = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
-                    }
-                    return yC;
-                }
-
-*/
-                // Calculate A at the resulting position
-                aNew/*, yC*/ = _xpCalc(tokenIndexFrom, tokenIndexTo, x, xp, y);
-
-                // 6. If A changed, calculate y again given A' and D
-                // Check if we switched A's during the swap
-                if (aNew == a){     // We have used the correct A
-                    return y;
-
-                } else {    // We have switched A's, do it again with the new A
-                    // if (yC == 0){
-                    //     yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a);
-                    // }
-                    // else if (yC == 1){
-                    //     yF = getY(self, tokenIndexFrom, tokenIndexTo, x, xp, a2);
-                    // }
-                    return getY(self, tokenIndexFrom, tokenIndexTo, x, xp, aNew);
-                }
-            }
-        }
-
-
-        revert("Approximation did not converge");
 
     }
 
 
+    /**
+     * @notice Calculate the xpNew -> total balances of the token & aNew -> new amplification coefficient based on new
+     *
+     * @param self Swap struct to read from
+     * @param tokenIndexFrom index of FROM token
+     * @param tokenIndexTo index of TO token
+     * @param x the new total amount of FROM token
+     * @param y the amount of TO token that should remain in the pool
+     * @return aNew New amplification coefficient
+     */
     function _xpCalc(
+        Swap storage self,
         uint8 tokenIndexFrom,
         uint8 tokenIndexTo,
         uint256 x,
-        uint256[] memory xp,
         uint256 y
-        ) internal view returns (uint256, uint256) 
+        ) internal view returns (uint256) 
     {
         uint256 xpNew0;
         uint256 xpNew1;
-        uint256 yC; 
-        uint256 aNew;    
 
-        // 4. Calculate xp2, being the the balances after the trade
+        // Calculate xpNew, being the the balances after the trade
         if( tokenIndexFrom == 0 && tokenIndexTo == 1) {
             xpNew0 = x;
             xpNew1 = y;
-            // if (xpNew0 < xpNew1) {
-            //     aNew = _getAPrecise(self);
-            //     yC = 0;
-            // } else {
-            //     aNew = _getA2Precise(self);
-            //     yC = 1;
-            // }
-            // return yC;
         } 
         else if( tokenIndexFrom == 1 && tokenIndexTo == 0) {
             xpNew0 = y;
             xpNew1 = x;
-            // if (xpNew0 < xpNew1) {
-            //     aNew = _getAPrecise(self);
-            //     yC = 0;
-            // } else {
-            //     aNew = _getA2Precise(self);
-            //     yC = 1;
-            // }
-            // return yC;
         }
 
-        // 5. Compare xp2[0] and xp2[1] and determine the target A
+        // Compare xpNew[0] and xpNew[1] and determine the target A
         if (xpNew0 < xpNew1) {
-            aNew = _getAPrecise(self);
-            // yC = 0;
+            return _getAPrecise(self);
         } else {
-            aNew = _getA2Precise(self);
-            // yC = 1;
+            return _getA2Precise(self);
         }
-        return aNew/*, yC*/;
-        
-
     }
 
 
@@ -809,7 +766,8 @@ library SwapUtils {
         uint8 tokenIndexTo,
         uint256 x,
         uint256[] memory xp,
-        uint256 a
+        uint256 a,
+        uint256 d
     ) internal view returns (uint256) {
         uint256 numTokens = self.pooledTokens.length;
         require(
@@ -821,8 +779,6 @@ library SwapUtils {
             "Tokens must be in pool"
         );
 
-        // uint256 a = _getAPrecise(self);
-        uint256 d = getD(xp, a);
         uint256 c = d;
         uint256 s;
         uint256 nA = numTokens.mul(a);
