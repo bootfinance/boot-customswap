@@ -117,6 +117,8 @@ contract Swap is OwnerPausable, ReentrancyGuard {
      * @param lpTokenSymbol the short symbol for the token to be deployed
      * @param _a the amplification coefficient * n * (n - 1). See the
      * StableSwap paper for details
+     * @param _a2 the amplification coefficient * n * (n - 1). See the
+     * StableSwap paper for details
      * @param _fee default swap fee to be initialized with
      * @param _adminFee default adminFee to be initialized with
      * @param _withdrawFee default withdrawFee to be initialized with
@@ -130,6 +132,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         string memory lpTokenName,
         string memory lpTokenSymbol,
         uint256 _a,
+        uint256 _a2,
         uint256 _fee,
         uint256 _adminFee,
         uint256 _withdrawFee
@@ -170,8 +173,9 @@ contract Swap is OwnerPausable, ReentrancyGuard {
             tokenIndexes[address(_pooledTokens[i])] = i;
         }
 
-        // Check _a, _fee, _adminFee, _withdrawFee, _allowlist parameters
+        // Check _a, _a2 _fee, _adminFee, _withdrawFee, _allowlist parameters
         require(_a < SwapUtils.MAX_A, "_a exceeds maximum");
+        require(_a2 < SwapUtils.MAX_A, "_a2 exceeds maximum");
         require(_fee < SwapUtils.MAX_SWAP_FEE, "_fee exceeds maximum");
         require(
             _adminFee < SwapUtils.MAX_ADMIN_FEE,
@@ -199,6 +203,10 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         swapStorage.futureA = _a.mul(SwapUtils.A_PRECISION);
         swapStorage.initialATime = 0;
         swapStorage.futureATime = 0;
+        swapStorage.initialA2 = _a2.mul(SwapUtils.A_PRECISION);
+        swapStorage.futureA2 = _a2.mul(SwapUtils.A_PRECISION);
+        swapStorage.initialA2Time = 0;
+        swapStorage.futureA2Time = 0;
         swapStorage.swapFee = _fee;
         swapStorage.adminFee = _adminFee;
         swapStorage.defaultWithdrawFee = _withdrawFee;
