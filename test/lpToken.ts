@@ -23,7 +23,7 @@ describe("LPToken", async () => {
       "FIRST",
       "18",
     ])) as LPToken
-    await expect(firstToken.mint(await owner.getAddress(), 0, [])).to.be
+    await expect(firstToken.mint(await owner.getAddress(), 0)).to.be
       .reverted
   })
 })

@@ -31,6 +31,10 @@ describe("MathUtils", () => {
       expect(await mathUtils.within1(3, 1)).to.eq(false)
     })
 
+    it("Returns true when a == b", async () => {
+      expect(await mathUtils.within1(1, 1)).to.eq(true)
+    })
+
     it("Returns true when a <= b and b - a <= 1", async () => {
       expect(await mathUtils.within1(1, 2)).to.eq(true)
     })
