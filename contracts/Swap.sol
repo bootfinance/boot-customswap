@@ -460,7 +460,6 @@ contract Swap is OwnerPausable, ReentrancyGuard {
      * @param minToMint the minimum LP tokens adding this amount of liquidity
      * should mint, otherwise revert. Handy for front-running mitigation
      * @param deadline latest timestamp to accept this transaction
-     * @param merkleProof data generated when constructing the allowlist merkle tree. Users can
      * get this data off chain. Even if the address is in the allowlist, users must include
      * a valid proof for this call to succeed. If the pool is no longer in the guarded release phase,
      * this parameter is ignored.
@@ -469,8 +468,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
     function addLiquidity(
         uint256[] calldata amounts,
         uint256 minToMint,
-        uint256 deadline,
-        bytes32[] calldata merkleProof
+        uint256 deadline
     )
         external
         nonReentrant
@@ -478,7 +476,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         deadlineCheck(deadline)
         returns (uint256)
     {
-        return swapStorage.addLiquidity(amounts, minToMint, merkleProof);
+        return swapStorage.addLiquidity(amounts, minToMint);
     }
 
     /**

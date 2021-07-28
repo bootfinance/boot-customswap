@@ -44,13 +44,10 @@ contract LPToken is ERC20Burnable, Ownable {
      * @dev only owner can call this mint function
      * @param recipient address of account to receive the tokens
      * @param amount amount of tokens to mint
-     * @param merkleProof the bytes32 array data that is used to prove recipient's address exists in the merkle tree
-     * stored in the allowlist contract. If the pool is not guarded, this parameter is ignored.
      */
     function mint(
         address recipient,
-        uint256 amount,
-        bytes32[] calldata merkleProof
+        uint256 amount
     ) external onlyOwner {
         require(amount != 0, "amount == 0");
 
