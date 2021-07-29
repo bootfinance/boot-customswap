@@ -264,7 +264,7 @@ describe("Swap", async () => {
   })
 
   describe("getA2", () => {
-    it.only("Returns correct value", async () => {
+    it("Returns correct value", async () => {
       expect(await swap.getA2()).to.eq(INITIAL_A2_VALUE)
     })
   })
