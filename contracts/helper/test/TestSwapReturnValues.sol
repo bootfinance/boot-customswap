@@ -57,14 +57,23 @@ contract TestSwapReturnValues {
 
     function test_addLiquidity(
         uint256[] calldata amounts,
-        uint256 minToMint,
-        bytes32[] calldata merkleProof
+        uint256 minToMint
+        // bytes32[] calldata merkleProof
     ) public {
-        uint256 balanceBefore = lpToken.balanceOf(address(this));
+        uint256 balanceBefore = lpToken.balanceOf(address(this));       // -> 0
+/*        console.log(
+            "balance before: %s,",
+            balanceBefore
+        );
+*/      
         uint256 returnValue =
-            swap.addLiquidity(amounts, minToMint, MAX_INT, merkleProof);
-        uint256 balanceAfter = lpToken.balanceOf(address(this));
-
+            swap.addLiquidity(amounts, minToMint, MAX_INT/*, merkleProof*/);
+        uint256 balanceAfter = lpToken.balanceOf(address(this));        // -> 2997459774673651937
+/*        console.log(
+            "balance after: %s,",
+            balanceAfter
+        );
+*/
         console.log(
             "addLiquidity: Expected %s, got %s",
             balanceAfter.sub(balanceBefore),
