@@ -453,8 +453,9 @@ describe("Swap", async () => {
       await swap
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
+        
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
-      expect(currentUser1Balance).to.eq(BigNumber.from("1996275270169644725"))
+      expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
       // Owner pauses the contract
       await swap.pause()
@@ -467,6 +468,7 @@ describe("Swap", async () => {
       await swap
         .connect(user1)
         .removeLiquidity(currentUser1Balance, [0, 0], MAX_UINT256)
+
       expect(await firstToken.balanceOf(swap.address)).to.eq(0)
       expect(await secondToken.balanceOf(swap.address)).to.eq(0)
     })
@@ -488,7 +490,7 @@ describe("Swap", async () => {
       ])
 
       expect(poolTokenBalanceBefore).to.eq(
-        BigNumber.from("1996275270169644725"),
+        BigNumber.from("1999837029709234523"),
       )
 
       const [
@@ -500,10 +502,10 @@ describe("Swap", async () => {
       )
 
       expect(expectedFirstTokenAmount).to.eq(
-        BigNumber.from("1498601924450190405"),
+        BigNumber.from("1499938883650925651"),
       )
       expect(expectedSecondTokenAmount).to.eq(
-        BigNumber.from("504529314564897436"),
+        BigNumber.from("504979424162478302"),
       )
 
       // User 1 removes liquidity
@@ -554,7 +556,7 @@ describe("Swap", async () => {
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
-      expect(currentUser1Balance).to.eq(BigNumber.from("1996275270169644725"))
+      expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
       await expect(
         swap
@@ -573,7 +575,7 @@ describe("Swap", async () => {
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
-      expect(currentUser1Balance).to.eq(BigNumber.from("1996275270169644725"))
+      expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
       const [
         expectedFirstTokenAmount,
@@ -581,10 +583,10 @@ describe("Swap", async () => {
       ] = await swap.calculateRemoveLiquidity(user1Address, currentUser1Balance)
 
       expect(expectedFirstTokenAmount).to.eq(
-        BigNumber.from("1498601924450190405"),
+        BigNumber.from("1499938883650925651"),
       )
       expect(expectedSecondTokenAmount).to.eq(
-        BigNumber.from("504529314564897436"),
+        BigNumber.from("504979424162478302"),
       )
 
       // User 2 adds liquidity, which leads to change in balance of underlying tokens
