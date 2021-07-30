@@ -1070,7 +1070,7 @@ describe("Swap", async () => {
     it("Succeeds with expected swap amounts", async () => {
       // User 1 calculates how much token to receive
       const calculatedSwapReturn = await swap.calculateSwap(0, 1, String(1e17))
-      expect(calculatedSwapReturn).to.eq(BigNumber.from("99702611562565289"))
+      expect(calculatedSwapReturn).to.eq(BigNumber.from("99758118630489467"))
 
       const [
         tokenFromBalanceBefore,
@@ -1087,6 +1087,7 @@ describe("Swap", async () => {
         tokenFromBalanceAfter,
         tokenToBalanceAfter,
       ] = await getUserTokenBalances(user1, [firstToken, secondToken])
+
       expect(tokenFromBalanceBefore.sub(tokenFromBalanceAfter)).to.eq(
         BigNumber.from(String(1e17)),
       )
@@ -1098,7 +1099,7 @@ describe("Swap", async () => {
     it("Reverts when minDy (minimum amount token to receive) is not reached due to front running", async () => {
       // User 1 calculates how much token to receive
       const calculatedSwapReturn = await swap.calculateSwap(0, 1, String(1e17))
-      expect(calculatedSwapReturn).to.eq(BigNumber.from("99702611562565289"))
+      expect(calculatedSwapReturn).to.eq(BigNumber.from("99758118630489467"))
 
       // User 2 swaps before User 1 does
       await swap.connect(user2).swap(0, 1, String(1e17), 0, MAX_UINT256)
@@ -1114,7 +1115,7 @@ describe("Swap", async () => {
     it("Succeeds when using lower minDy even when transaction is front-ran", async () => {
       // User 1 calculates how much token to receive with 1% slippage
       const calculatedSwapReturn = await swap.calculateSwap(0, 1, String(1e17))
-      expect(calculatedSwapReturn).to.eq(BigNumber.from("99702611562565289"))
+      expect(calculatedSwapReturn).to.eq(BigNumber.from("99758118630489467"))
 
       const [
         tokenFromBalanceBefore,
@@ -1151,7 +1152,7 @@ describe("Swap", async () => {
 
       const actualReceivedAmount = tokenToBalanceAfter.sub(tokenToBalanceBefore)
 
-      expect(actualReceivedAmount).to.eq(BigNumber.from("99286252365528551"))
+      expect(actualReceivedAmount).to.eq(BigNumber.from("99458274031026020"))
       expect(actualReceivedAmount).to.gt(
         calculatedSwapReturnWithNegativeSlippage,
       )

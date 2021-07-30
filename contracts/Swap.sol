@@ -435,6 +435,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
      * @param dx the amount of tokens the user wants to swap from
      * @param minDy the min amount the user would like to receive, or revert.
      * @param deadline latest timestamp to accept this transaction
+     * @return amount of token user received on swap
      */
     function swap(
         uint8 tokenIndexFrom,
