@@ -453,7 +453,7 @@ describe("Swap", async () => {
       await swap
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
-        
+
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
       expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
@@ -670,7 +670,7 @@ describe("Swap", async () => {
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
-      expect(currentUser1Balance).to.eq(BigNumber.from("1996275270169644725"))
+      expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
       // User 1 calculates amount of pool token to be burned
       const maxPoolTokenAmountToBeBurned = await swap.calculateTokenAmount(
@@ -732,7 +732,7 @@ describe("Swap", async () => {
         poolTokenBalanceAfter,
       )
 
-      expect(actualPoolTokenBurned).to.eq(String("1000934178112841889"))
+      expect(actualPoolTokenBurned).to.eq(String("1003464792122420115"))
       expect(actualPoolTokenBurned).to.gte(
         maxPoolTokenAmountToBeBurnedPositiveSlippage,
       )
@@ -766,7 +766,7 @@ describe("Swap", async () => {
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
-      expect(currentUser1Balance).to.eq(BigNumber.from("1996275270169644725"))
+      expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
       await expect(
         swap
@@ -784,8 +784,9 @@ describe("Swap", async () => {
       await swap
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
+
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
-      expect(currentUser1Balance).to.eq(BigNumber.from("1996275270169644725"))
+      expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
       // User 1 calculates amount of pool token to be burned
       const maxPoolTokenAmountToBeBurned = await swap.calculateTokenAmount(
@@ -824,6 +825,7 @@ describe("Swap", async () => {
       await swap
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
+
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
 
       const currentTimestamp = await getCurrentBlockTimestamp()
@@ -847,6 +849,7 @@ describe("Swap", async () => {
       await swap
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
+
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
 
       // User 1 removes liquidity
