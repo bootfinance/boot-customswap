@@ -879,8 +879,9 @@ describe("Swap", async () => {
       await swap
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
+
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
-      expect(currentUser1Balance).to.eq(BigNumber.from("1996275270169644725"))
+      expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
       await expect(
         swap.calculateRemoveLiquidityOneToken(
@@ -902,8 +903,9 @@ describe("Swap", async () => {
       await swap
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
+
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
-      expect(currentUser1Balance).to.eq(BigNumber.from("1996275270169644725"))
+      expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
       // User 1 calculates the amount of underlying token to receive.
       const calculatedFirstTokenAmount = await swap.calculateRemoveLiquidityOneToken(
@@ -912,7 +914,7 @@ describe("Swap", async () => {
         0,
       )
       expect(calculatedFirstTokenAmount).to.eq(
-        BigNumber.from("2008990034631583696"),
+        BigNumber.from("2008991609277826370"),
       )
 
       // User 1 initiates one token withdrawal
@@ -928,7 +930,7 @@ describe("Swap", async () => {
         )
       const after = await firstToken.balanceOf(user1Address)
 
-      expect(after.sub(before)).to.eq(BigNumber.from("2008990034631583696"))
+      expect(after.sub(before)).to.eq(BigNumber.from("2008991609277826370"))
     })
 
     it("Returns correct amount of received token", async () => {
@@ -952,7 +954,7 @@ describe("Swap", async () => {
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
-      expect(currentUser1Balance).to.eq(BigNumber.from("1996275270169644725"))
+      expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
       await expect(
         swap
@@ -972,7 +974,7 @@ describe("Swap", async () => {
         .connect(user1)
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256/*, []*/)
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
-      expect(currentUser1Balance).to.eq(BigNumber.from("1996275270169644725"))
+      expect(currentUser1Balance).to.eq(BigNumber.from("1999837029709234523"))
 
       // User 1 calculates the amount of underlying token to receive.
       const calculatedFirstTokenAmount = await swap.calculateRemoveLiquidityOneToken(
@@ -981,7 +983,7 @@ describe("Swap", async () => {
         0,
       )
       expect(calculatedFirstTokenAmount).to.eq(
-        BigNumber.from("2008990034631583696"),
+        BigNumber.from("2008991609277826370"),
       )
 
       // User 2 adds liquidity before User 1 initiates withdrawal
