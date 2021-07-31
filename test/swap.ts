@@ -2222,7 +2222,7 @@ describe("Swap", async () => {
       await swap.setDefaultWithdrawFee(String(5e7))
 
       // Since 2 weeks is already past, fee should linearly decay from 0.25% to 0% over 2 weeks
-      // Fee should start aat 0.25% and decay to 0% linearly over the next 2 weeks
+      // Fee should start at 0.25% and decay to 0% linearly over the next 2 weeks
       expect(await swap.calculateCurrentWithdrawFee(user2Address)).to.be.eq(
         25000000,
       )
@@ -2300,7 +2300,7 @@ describe("Swap", async () => {
       )
 
       // 2 weeks pass
-      // Fee should be around 2.5e7
+      // Fee should be around 3.75e7
       await setTimestamp((await getCurrentBlockTimestamp()) + TIME.WEEKS * 2)
       expect(await swap.calculateCurrentWithdrawFee(user2Address)).to.be.eq(
         37499968,
