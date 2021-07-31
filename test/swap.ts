@@ -1199,12 +1199,12 @@ describe("Swap", async () => {
       // With each swap, virtual price will increase due to the fees
       await swap.connect(user1).swap(0, 1, String(1e17), 0, MAX_UINT256)
       expect(await swap.getVirtualPrice()).to.eq(
-        BigNumber.from("1000050005862349911"),
+        BigNumber.from("1000050004242800099"),
       )
 
       await swap.connect(user1).swap(1, 0, String(1e17), 0, MAX_UINT256)
       expect(await swap.getVirtualPrice()).to.eq(
-        BigNumber.from("1000100104768517937"),
+        BigNumber.from("1000100075342684773"),
       )
     })
 
@@ -1232,7 +1232,7 @@ describe("Swap", async () => {
         .removeLiquidityImbalance([0, String(1e18)], String(2e18), MAX_UINT256)
 
       expect(await swap.getVirtualPrice()).to.eq(
-        BigNumber.from("1000200154928939884"),
+        BigNumber.from("1000200154928939769"),
       )
     })
 
@@ -1249,14 +1249,14 @@ describe("Swap", async () => {
         .connect(user2)
         .addLiquidity([String(2e18), String(0)], 0, MAX_UINT256/*, []*/)
       expect(await swap.getVirtualPrice()).to.eq(
-        BigNumber.from("1000167146429977312"),
+        BigNumber.from("1000167020672907157"),
       )
       // User 2 makes balanced deposit, keeping the ratio 2:1
       await swap
         .connect(user2)
         .addLiquidity([String(2e18), String(1e18)], 0, MAX_UINT256/*, []*/)
       expect(await swap.getVirtualPrice()).to.eq(
-        BigNumber.from("1000167146429977312"),
+        BigNumber.from("1000167020672907157"),
       )
     })
 
@@ -1343,7 +1343,7 @@ describe("Swap", async () => {
       await swap.connect(user1).swap(0, 1, String(1e17), 0, MAX_UINT256)
 
       expect(await swap.getAdminBalance(0)).to.eq(0)
-      expect(await swap.getAdminBalance(1)).to.eq(String(998024139765))
+      expect(await swap.getAdminBalance(1)).to.eq(String(998579766070))
 
       // After the first swap, the pool becomes imbalanced; there are more 0th token than 1st token in the pool.
       // Therefore swapping from 1st -> 0th will result in more 0th token returned
@@ -1351,8 +1351,8 @@ describe("Swap", async () => {
 
       await swap.connect(user1).swap(1, 0, String(1e17), 0, MAX_UINT256)
 
-      expect(await swap.getAdminBalance(0)).to.eq(String(1001973776101))
-      expect(await swap.getAdminBalance(1)).to.eq(String(998024139765))
+      expect(await swap.getAdminBalance(0)).to.eq(String(1001418736704))
+      expect(await swap.getAdminBalance(1)).to.eq(String(998579766070))
     })
   })
 
@@ -1388,8 +1388,8 @@ describe("Swap", async () => {
       await swap.connect(user1).swap(0, 1, String(1e17), 0, MAX_UINT256)
       await swap.connect(user1).swap(1, 0, String(1e17), 0, MAX_UINT256)
 
-      expect(await swap.getAdminBalance(0)).to.eq(String(1001973776101))
-      expect(await swap.getAdminBalance(1)).to.eq(String(998024139765))
+      expect(await swap.getAdminBalance(0)).to.eq(String(1001418736704))
+      expect(await swap.getAdminBalance(1)).to.eq(String(998579766070))
 
       const [
         firstTokenBefore,
@@ -1403,10 +1403,8 @@ describe("Swap", async () => {
         secondTokenAfter,
       ] = await getUserTokenBalances(owner, [firstToken, secondToken])
 
-      expect(firstTokenAfter.sub(firstTokenBefore)).to.eq(String(1001973776101))
-      expect(secondTokenAfter.sub(secondTokenBefore)).to.eq(
-        String(998024139765),
-      )
+      expect(firstTokenAfter.sub(firstTokenBefore)).to.eq(String(1001418736704))
+      expect(secondTokenAfter.sub(secondTokenBefore)).to.eq(String(998579766070))
     })
 
     it("Withdrawing admin fees has no impact on users' withdrawal", async () => {
@@ -1440,11 +1438,11 @@ describe("Swap", async () => {
       ] = await getUserTokenBalances(user1, [firstToken, secondToken])
 
       expect(firstTokenAfter.sub(firstTokenBefore)).to.eq(
-        BigNumber.from("1000009516257264879"),
+        BigNumber.from("1000145299545334043"),
       )
 
       expect(secondTokenAfter.sub(secondTokenBefore)).to.eq(
-        BigNumber.from("1000980987206499309"),
+        BigNumber.from("1000845061833539006"),
       )
     })
   })
