@@ -174,8 +174,8 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         }
 
         // Check _a, _a2 _fee, _adminFee, _withdrawFee, _allowlist parameters
-        require(_a < SwapUtils.MAX_A, "_a exceeds maximum");
-        require(_a2 < SwapUtils.MAX_A, "_a2 exceeds maximum");
+        require(_a >= 0 && _a <= SwapUtils.MAX_A, "_a not within the limits");
+        require(_a2 >= 0 && _a2 <= SwapUtils.MAX_A, "_a2 not within the limits");
         require(_fee < SwapUtils.MAX_SWAP_FEE, "_fee exceeds maximum");
         require(
             _adminFee < SwapUtils.MAX_ADMIN_FEE,

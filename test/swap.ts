@@ -2564,12 +2564,13 @@ describe("Swap", async () => {
       ).to.emit(swap, "RampA")
     })
 
-    it("Succeeds to ramp upwards", async () => {
+    it("Succeeds to ramp upwards in 2nd direction", async () => {
       // Create imbalanced pool to measure virtual price change
-      // We expect virtual price to increase as A decreases
-      await swap.addLiquidity([String(1e18), 0], 0, MAX_UINT256/*, []*/)
+      // We expect virtual price to increase as A increases in 2nd direction
+      // 2nd direction: `addLiquidity(0, 1e18)`
+      await swap.addLiquidity([0, String(1e18)], 0, MAX_UINT256/*, []*/)
 
-      // call rampA(), changing A to 100 within a span of 14 days
+      // call rampA(), changing A (from 50 set value in beforeEach()) to 100 within a span of 14 days
       const endTimestamp =
         (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
       await swap.rampA(100, endTimestamp)
@@ -2592,12 +2593,42 @@ describe("Swap", async () => {
       expect(await swap.getVirtualPrice()).to.be.eq("1000771363829405068")
     })
 
-    it("Succeeds to ramp downwards", async () => {
+    it("Succeeds to ramp upwards with no change in VP in 1st direction", async () => {
       // Create imbalanced pool to measure virtual price change
-      // We expect virtual price to decrease as A decreases
+      // We expect virtual price to remain constant as A increases in 1st direction
+      // 1st direction: `addLiquidity(1e18, 0)`
       await swap.addLiquidity([String(1e18), 0], 0, MAX_UINT256/*, []*/)
 
-      // call rampA()
+      // call rampA(), changing A (from 50 set value in beforeEach()) to 100 within a span of 14 days
+      const endTimestamp =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA(100, endTimestamp)
+
+      // +0 seconds since ramp A
+      expect(await swap.getA()).to.be.eq(50)
+      expect(await swap.getAPrecise()).to.be.eq(5000)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167020672907157")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA()).to.be.eq(54)
+      expect(await swap.getAPrecise()).to.be.eq(5413)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167020672907157")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp)
+      expect(await swap.getA()).to.be.eq(100)
+      expect(await swap.getAPrecise()).to.be.eq(10000)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167020672907157")
+    })
+
+    it("Succeeds to ramp downwards in 2nd direction", async () => {
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to decrease as A decreases in 2nd direction
+      // 2nd direction: `addLiquidity(0, 1e18)`
+      await swap.addLiquidity([0, String(1e18)], 0, MAX_UINT256/*, []*/)
+
+      // call rampA(), changing A (from 50 set value in beforeEach()) to 25 within a span of 14 days
       const endTimestamp =
         (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
       await swap.rampA(25, endTimestamp)
@@ -2618,6 +2649,35 @@ describe("Swap", async () => {
       expect(await swap.getA()).to.be.eq(25)
       expect(await swap.getAPrecise()).to.be.eq(2500)
       expect(await swap.getVirtualPrice()).to.be.eq("998999574522335473")
+    })
+
+    it("Succeeds to ramp downwards with no change in VP in 1st direction", async () => {
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to remain constant as A decreases in 1st direction
+      // 1st direction: `addLiquidity(1e18, 0)`
+      await swap.addLiquidity([String(1e18), 0], 0, MAX_UINT256/*, []*/)
+
+      // call rampA(), changing A (from 50 set value in beforeEach()) to 25 within a span of 14 days
+      const endTimestamp =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA(25, endTimestamp)
+
+      // +0 seconds since ramp A
+      expect(await swap.getA()).to.be.eq(50)
+      expect(await swap.getAPrecise()).to.be.eq(5000)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167020672907157")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA()).to.be.eq(47)
+      expect(await swap.getAPrecise()).to.be.eq(4794)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167020672907157")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp)
+      expect(await swap.getA()).to.be.eq(25)
+      expect(await swap.getAPrecise()).to.be.eq(2500)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167020672907157")
     })
 
     it("Reverts when non-owner calls it", async () => {
@@ -2720,6 +2780,238 @@ describe("Swap", async () => {
 
       // check call reverts when ramp is already stopped
       await expect(swap.stopRampA()).to.be.revertedWith(
+        "Ramp is already stopped",
+      )
+    })
+  })
+
+  describe("rampA2", () => {
+    // beforeEach(async () => {
+    //   await swap.disableGuard()
+    // })
+    it("Emits RampA2 event", async () => {
+      await expect(
+        swap.rampA2(
+          100,
+          (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
+        ),
+      ).to.emit(swap, "RampA2")
+    })
+
+    it("Succeeds to ramp upwards in 1st direction", async () => {
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to increase as A2 increases in 1st direction
+      // 1st direction: `addLiquidity(1e18, 0)`
+      await swap.addLiquidity([String(1e18), 0], 0, MAX_UINT256/*, []*/)
+
+      // call rampA2(), changing A2 (from 70 set value in beforeEach()) to 100 within a span of 14 days
+      const endTimestamp =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(100, endTimestamp)
+
+      // +0 seconds since ramp A2
+      expect(await swap.getA2()).to.be.eq(70)
+      expect(await swap.getA2Precise()).to.be.eq(7000)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167020672907157")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA2()).to.be.eq(72)
+      expect(await swap.getA2Precise()).to.be.eq(7248)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000196609805168150")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp)
+      expect(await swap.getA2()).to.be.eq(100)
+      expect(await swap.getA2Precise()).to.be.eq(10000)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000427602742768169")
+    })
+
+    it("Succeeds to ramp upwards with no change in VP in 2nd direction", async () => {
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to remain constant as A2 increases in 2nd direction
+      // 2nd direction: `addLiquidity(0, 1e18)`
+      await swap.addLiquidity([0, String(1e18)], 0, MAX_UINT256/*, []*/)
+
+      // call rampA2(), changing A2 (from 70 set value in beforeEach()) to 100 within a span of 14 days
+      const endTimestamp =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(100, endTimestamp)
+
+      // +0 seconds since ramp A2
+      expect(await swap.getA2()).to.be.eq(70)
+      expect(await swap.getA2Precise()).to.be.eq(7000)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167146429977312")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA2()).to.be.eq(72)
+      expect(await swap.getA2Precise()).to.be.eq(7248)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167146429977312")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp)
+      expect(await swap.getA2()).to.be.eq(100)
+      expect(await swap.getA2Precise()).to.be.eq(10000)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167146429977312")
+    })
+
+    it("Succeeds to ramp downwards in 1st direction", async () => {
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to decrease as A2 decreases in 1st direction
+      // 1st direction: `addLiquidity(1e18, 0)`
+      await swap.addLiquidity([String(1e18), 0], 0, MAX_UINT256/*, []*/)
+
+      // call rampA2(), changing A2 (from 70 set value in beforeEach()) to 35 within a span of 14 days
+      const endTimestamp =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(35, endTimestamp)
+
+      // +0 seconds since ramp A2
+      expect(await swap.getA2()).to.be.eq(70)
+      expect(await swap.getA2Precise()).to.be.eq(7000)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167020672907157")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA2()).to.be.eq(67)
+      expect(await swap.getA2Precise()).to.be.eq(6711)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000129828497524616")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp)
+      expect(await swap.getA2()).to.be.eq(35)
+      expect(await swap.getA2Precise()).to.be.eq(3500)
+      expect(await swap.getVirtualPrice()).to.be.eq("999316859034480742")
+    })
+
+    it("Succeeds to ramp downwards with no change in VP in 2nd direction", async () => {
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to remain constant as A2 decreases in 2nd direction
+      // 2nd direction: `addLiquidity(0, 1e18)`
+      await swap.addLiquidity([0, String(1e18)], 0, MAX_UINT256/*, []*/)
+
+      // call rampA2(), changing A2 (from 70 set value in beforeEach()) to 35 within a span of 14 days
+      const endTimestamp =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(35, endTimestamp)
+
+      // +0 seconds since ramp A2
+      expect(await swap.getA2()).to.be.eq(70)
+      expect(await swap.getA2Precise()).to.be.eq(7000)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167146429977312")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA2()).to.be.eq(67)
+      expect(await swap.getA2Precise()).to.be.eq(6711)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167146429977312")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp)
+      expect(await swap.getA2()).to.be.eq(35)
+      expect(await swap.getA2Precise()).to.be.eq(3500)
+      expect(await swap.getVirtualPrice()).to.be.eq("1000167146429977312")
+    })
+
+
+    it("Reverts when non-owner calls it", async () => {
+      await expect(
+        swap
+          .connect(user1)
+          .rampA2(75, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
+      ).to.be.reverted
+    })
+
+    it("Reverts with 'Wait 1 day before starting ramp'", async () => {
+      await swap.rampA2(
+        75,
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
+      )
+      await expect(
+        swap.rampA2(75, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
+      ).to.be.revertedWith("Wait 1 day before starting ramp")
+    })
+
+    it("Reverts with 'Insufficient ramp time'", async () => {
+      await expect(
+        swap.rampA2(75, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS - 1),
+      ).to.be.revertedWith("Insufficient ramp time")
+    })
+
+    it("Reverts with 'futureA2_ must be > 0 and < MAX_A'", async () => {
+      await expect(
+        swap.rampA2(0, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
+      ).to.be.revertedWith("futureA2_ must be > 0 and < MAX_A")
+    })
+
+    it("Reverts with 'futureA2_ is too small'", async () => {
+      await expect(
+        swap.rampA2(34, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
+      ).to.be.revertedWith("futureA2_ is too small")
+    })
+
+    it("Reverts with 'futureA2_ is too large'", async () => {
+      await expect(
+        swap.rampA2(141, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1)
+        ).to.be.revertedWith("futureA2_ is too large")
+    })
+  })
+
+  describe("stopRampA2", () => {
+    it("Emits StopRampA2 event", async () => {
+      // call rampA2()
+      await swap.rampA2(
+        100,
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
+      )
+
+      // Stop ramp
+      expect(swap.stopRampA2()).to.emit(swap, "StopRampA2")
+    })
+
+    it("Stop ramp succeeds", async () => {
+      // call rampA2()
+      const endTimestamp =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(100, endTimestamp)
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA2()).to.be.eq(72)
+      expect(await swap.getA2Precise()).to.be.eq(7248)
+
+      // Stop ramp
+      await swap.stopRampA2()
+      expect(await swap.getA2()).to.be.eq(72)
+      expect(await swap.getA2Precise()).to.be.eq(7248)
+
+      // set timestamp to endTimestamp
+      await setTimestamp(endTimestamp)
+
+      // verify ramp has stopped
+      expect(await swap.getA2()).to.be.eq(72)
+      expect(await swap.getA2Precise()).to.be.eq(7248)
+    })
+
+    it("Reverts with 'Ramp is already stopped'", async () => {
+      // call rampA2()
+      const endTimestamp =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(100, endTimestamp)
+
+      // set timestamp to +10000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA2()).to.be.eq(72)
+      expect(await swap.getA2Precise()).to.be.eq(7248)
+
+      // Stop ramp
+      await swap.stopRampA2()
+      expect(await swap.getA2()).to.be.eq(72)
+      expect(await swap.getA2Precise()).to.be.eq(7248)
+
+      // check call reverts when ramp is already stopped
+      await expect(swap.stopRampA2()).to.be.revertedWith(
         "Ramp is already stopped",
       )
     })
