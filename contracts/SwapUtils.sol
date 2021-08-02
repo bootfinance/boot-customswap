@@ -1482,8 +1482,8 @@ library SwapUtils {
             "Insufficient ramp time"
         );
         require(
-            futureA_ > 0 && futureA_ < MAX_A,
-            "futureA_ must be > 0 and < MAX_A"
+            futureA_ >= 0 && futureA_ <= MAX_A,
+            "futureA_ must be >= 0 and <= MAX_A"
         );
 
         uint256 initialAPrecise = _getAPrecise(self);
@@ -1536,8 +1536,8 @@ library SwapUtils {
             "Insufficient ramp time"
         );
         require(
-            futureA2_ > 0 && futureA2_ < MAX_A,
-            "futureA2_ must be > 0 and < MAX_A"
+            futureA2_ >= 0 && futureA2_ <= MAX_A,
+            "futureA2_ must be >= 0 and <= MAX_A"
         );
 
         uint256 initialA2Precise = _getA2Precise(self);

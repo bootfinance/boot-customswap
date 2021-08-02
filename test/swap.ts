@@ -2704,10 +2704,10 @@ describe("Swap", async () => {
       ).to.be.revertedWith("Insufficient ramp time")
     })
 
-    it("Reverts with 'futureA_ must be > 0 and < MAX_A'", async () => {
+    it("Reverts with 'futureA_ must be >= 0 and <= MAX_A'", async () => {
       await expect(
-        swap.rampA(0, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
-      ).to.be.revertedWith("futureA_ must be > 0 and < MAX_A")
+        swap.rampA(1e6 + 1, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
+      ).to.be.revertedWith("futureA_ must be >= 0 and <= MAX_A")
     })
 
     it("Reverts with 'futureA_ is too small'", async () => {
@@ -2939,10 +2939,10 @@ describe("Swap", async () => {
       ).to.be.revertedWith("Insufficient ramp time")
     })
 
-    it("Reverts with 'futureA2_ must be > 0 and < MAX_A'", async () => {
+    it("Reverts with 'futureA2_ must be >= 0 and <= MAX_A'", async () => {
       await expect(
-        swap.rampA2(0, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
-      ).to.be.revertedWith("futureA2_ must be > 0 and < MAX_A")
+        swap.rampA2(1e6+1, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
+      ).to.be.revertedWith("futureA2_ must be >= 0 and <= MAX_A")
     })
 
     it("Reverts with 'futureA2_ is too small'", async () => {
