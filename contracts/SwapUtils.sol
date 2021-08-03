@@ -531,10 +531,15 @@ library SwapUtils {
                 // dP = dP * D * D * D * ... overflow!
             }
             prevD = d;
+            // d = nA.mul(s).div(A_PRECISION).add(dP.mul(numTokens)).mul(d).div(
+            //     nA.sub(A_PRECISION).mul(d).div(A_PRECISION).add(
+            //         numTokens.add(1).mul(dP)
+            //     )
+            // );
+
             d = nA.mul(s).div(A_PRECISION).add(dP.mul(numTokens)).mul(d).div(
-                nA.sub(A_PRECISION).mul(d).div(A_PRECISION).add(
-                    numTokens.add(1).mul(dP)
-                )
+                nA.mul(d).div(A_PRECISION).add(
+                    numTokens.add(1).mul(dP)).sub(d)
             );
             if (d.within1(prevD)) {
                 return d;
