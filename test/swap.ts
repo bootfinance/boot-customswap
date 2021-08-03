@@ -2622,6 +2622,149 @@ describe("Swap", async () => {
       expect(await swap.getVirtualPrice()).to.be.eq("1000167020672907157")
     })
 
+    it("Succeeds to ramp upwards 'Greater change in Virtual Price with more Imbalance while providing liquidity' in 2nd direction", async () => {
+      // part-1
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to increase as A increases in 2nd direction
+      // 2nd direction: `addLiquidity(0, 1e18)`
+      await swap
+        .connect(user1)
+        .addLiquidity([String(1e9), String(1e18)], 0, MAX_UINT256/*, []*/)
+
+      const [
+        firstTokenBalanceBefore,
+        secondTokenBalanceBefore,
+        poolTokenBalanceBefore,
+      ] = await getUserTokenBalances(user1, [
+        firstToken,
+        secondToken,
+        swapToken,
+      ])
+
+      expect(poolTokenBalanceBefore).to.eq(
+        BigNumber.from("995836106639418513"),
+      )
+
+      const [
+        expectedFirstTokenAmount,
+        expectedSecondTokenAmount,
+      ] = await swap.calculateRemoveLiquidity(
+        user1Address,
+        poolTokenBalanceBefore,
+      )
+
+      expect(expectedFirstTokenAmount).to.eq(
+        BigNumber.from("332406737948136471"),
+      )
+      expect(expectedSecondTokenAmount).to.eq(
+        BigNumber.from("664813475231459468"),
+      )
+
+      // call rampA(), changing A (from 50 set value in beforeEach()) to 100 within a span of 14 days
+      const endTimestamp1 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA(100, endTimestamp1)
+
+      // +0 seconds since ramp A
+      expect(await swap.getA()).to.be.eq(50)
+      expect(await swap.getAPrecise()).to.be.eq(5000)
+      const virtualPrice11 = await swap.getVirtualPrice()
+      expect(virtualPrice11).to.be.eq("1000167146429752916")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA()).to.be.eq(54)
+      expect(await swap.getAPrecise()).to.be.eq(5413)
+      const virtualPrice12 = await swap.getVirtualPrice()
+      expect(virtualPrice12).to.be.eq("1000258443199734552")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp1)
+      expect(await swap.getA()).to.be.eq(100)
+      expect(await swap.getAPrecise()).to.be.eq(10000)
+      const virtualPrice13 = await swap.getVirtualPrice()
+      expect(virtualPrice13).to.be.eq("1000771363827375533")
+
+      // Now ramp is stopped automatically after 2 weeks
+
+      // So, remove liquidity for the part-2 to start fresh
+      // User 1 removes liquidity
+      await swapToken
+        .connect(user1)
+        .approve(swap.address, poolTokenBalanceBefore)
+      await swap
+        .connect(user1)
+        .removeLiquidity(
+          poolTokenBalanceBefore,
+          [expectedFirstTokenAmount, expectedSecondTokenAmount],
+          MAX_UINT256,
+        )
+
+      const [
+        firstTokenBalanceAfter,
+        secondTokenBalanceAfter,
+      ] = await getUserTokenBalances(user1, [firstToken, secondToken])
+
+      // Check the actual returned token amounts match the expected amounts
+      expect(firstTokenBalanceAfter.sub(firstTokenBalanceBefore)).to.eq(
+        expectedFirstTokenAmount,
+      )
+      expect(secondTokenBalanceAfter.sub(secondTokenBalanceBefore)).to.eq(
+        expectedSecondTokenAmount,
+      )
+
+      // Now, ramp down again to 50 w/o adding liquidity for part-2 to start fresh
+      // getAPrecise, getVirtalPrice only varies with liquidity addition. 
+      // So, not needed in this calculation, but ensure only A reaches to the desired value for part-2
+      const endTimestamp12 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA(50, endTimestamp12)
+      await setTimestamp(endTimestamp12)
+      expect(await swap.getA()).to.be.eq(50)
+
+
+      // -------------------------------------------------------------------------------------------------
+      // part-2
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to increase as A increases in 2nd direction
+      // 2nd direction: `addLiquidity(0, 1e18)`
+      await swap.addLiquidity([0, String(1e18)], 0, MAX_UINT256/*, []*/)
+
+      // call rampA(), changing A (from 50 set value in beforeEach()) to 100 within a span of 14 days
+      const endTimestamp2 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA(100, endTimestamp2)
+
+      // +0 seconds since ramp A
+      expect(await swap.getA()).to.be.eq(50)
+      expect(await swap.getAPrecise()).to.be.eq(5000)
+      const virtualPrice21 = await swap.getVirtualPrice()
+      expect(virtualPrice21).to.be.eq("1000280048778946864")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA()).to.be.eq(54)
+      expect(await swap.getAPrecise()).to.be.eq(5413)
+      const virtualPrice22 = await swap.getVirtualPrice()
+      expect(virtualPrice22).to.be.eq("1000601097069966976")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp2)
+      expect(await swap.getA()).to.be.eq(100)
+      expect(await swap.getAPrecise()).to.be.eq(10000)
+      const virtualPrice23 = await swap.getVirtualPrice()
+      expect(virtualPrice23).to.be.eq("1002412838644811854")
+
+      // with more imbalance in liquidity, greater is the change in virtual price
+      const virtualPriceDiff2 = virtualPrice23.sub(virtualPrice21)
+      expect(virtualPriceDiff2).to.be.eq("2132789865864990")
+      const virtualPriceDiff1 = virtualPrice13.sub(virtualPrice11)
+      expect(virtualPriceDiff1).to.be.eq("604217397622617")
+
+      // So, this verifies greater change in virtualPrice
+      expect(virtualPriceDiff2).to.be.gt(virtualPriceDiff1)
+    })
+
     it("Succeeds to ramp downwards in 2nd direction", async () => {
       // Create imbalanced pool to measure virtual price change
       // We expect virtual price to decrease as A decreases in 2nd direction
@@ -2678,6 +2821,149 @@ describe("Swap", async () => {
       expect(await swap.getA()).to.be.eq(25)
       expect(await swap.getAPrecise()).to.be.eq(2500)
       expect(await swap.getVirtualPrice()).to.be.eq("1000167020672907157")
+    })
+
+    it("Succeeds to ramp downwards 'Greater change in Virtual Price with more Imbalance while providing liquidity' in 2nd direction", async () => {
+      // part-1
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to increase as A increases in 2nd direction
+      // 2nd direction: `addLiquidity(0, 1e18)`
+      await swap
+        .connect(user1)
+        .addLiquidity([String(1e9), String(1e18)], 0, MAX_UINT256/*, []*/)
+
+      const [
+        firstTokenBalanceBefore,
+        secondTokenBalanceBefore,
+        poolTokenBalanceBefore,
+      ] = await getUserTokenBalances(user1, [
+        firstToken,
+        secondToken,
+        swapToken,
+      ])
+
+      expect(poolTokenBalanceBefore).to.eq(
+        BigNumber.from("995836106639418513"),
+      )
+
+      const [
+        expectedFirstTokenAmount,
+        expectedSecondTokenAmount,
+      ] = await swap.calculateRemoveLiquidity(
+        user1Address,
+        poolTokenBalanceBefore,
+      )
+
+      expect(expectedFirstTokenAmount).to.eq(
+        BigNumber.from("332406737948136471"),
+      )
+      expect(expectedSecondTokenAmount).to.eq(
+        BigNumber.from("664813475231459468"),
+      )
+
+      // call rampA(), changing A (from 50 set value in beforeEach()) to 25 within a span of 14 days
+      const endTimestamp1 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA(25, endTimestamp1)
+
+      // +0 seconds since ramp A
+      expect(await swap.getA()).to.be.eq(50)
+      expect(await swap.getAPrecise()).to.be.eq(5000)
+      const virtualPrice11 = await swap.getVirtualPrice()
+      expect(virtualPrice11).to.be.eq("1000167146429752916")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA()).to.be.eq(47)
+      expect(await swap.getAPrecise()).to.be.eq(4794)
+      const virtualPrice12 = await swap.getVirtualPrice()
+      expect(virtualPrice12).to.be.eq("1000115870150320396")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp1)
+      expect(await swap.getA()).to.be.eq(25)
+      expect(await swap.getAPrecise()).to.be.eq(2500)
+      const virtualPrice13 = await swap.getVirtualPrice()
+      expect(virtualPrice13).to.be.eq("998999574525581460")
+
+      // Now ramp is stopped automatically after 2 weeks
+
+      // So, remove liquidity for the part-2 to start fresh
+      // User 1 removes liquidity
+      await swapToken
+        .connect(user1)
+        .approve(swap.address, poolTokenBalanceBefore)
+      await swap
+        .connect(user1)
+        .removeLiquidity(
+          poolTokenBalanceBefore,
+          [expectedFirstTokenAmount, expectedSecondTokenAmount],
+          MAX_UINT256,
+        )
+
+      const [
+        firstTokenBalanceAfter,
+        secondTokenBalanceAfter,
+      ] = await getUserTokenBalances(user1, [firstToken, secondToken])
+
+      // Check the actual returned token amounts match the expected amounts
+      expect(firstTokenBalanceAfter.sub(firstTokenBalanceBefore)).to.eq(
+        expectedFirstTokenAmount,
+      )
+      expect(secondTokenBalanceAfter.sub(secondTokenBalanceBefore)).to.eq(
+        expectedSecondTokenAmount,
+      )
+
+      // Now, ramp up again to 50 w/o adding liquidity for part-2 to start fresh
+      // getAPrecise, getVirtalPrice only varies with liquidity addition. 
+      // So, not needed in this calculation, but ensure only A reaches to the desired value for part-2
+      const endTimestamp12 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA(50, endTimestamp12)
+      await setTimestamp(endTimestamp12)
+      expect(await swap.getA()).to.be.eq(50)
+
+
+      // -------------------------------------------------------------------------------------------------
+      // part-2
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to increase as A increases in 2nd direction
+      // 2nd direction: `addLiquidity(0, 1e18)`
+      await swap.addLiquidity([0, String(1e18)], 0, MAX_UINT256/*, []*/)
+
+      // call rampA(), changing A (from 50 set value in beforeEach()) to 25 within a span of 14 days
+      const endTimestamp2 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA(25, endTimestamp2)
+
+      // +0 seconds since ramp A
+      expect(await swap.getA()).to.be.eq(50)
+      expect(await swap.getAPrecise()).to.be.eq(5000)
+      const virtualPrice21 = await swap.getVirtualPrice()
+      expect(virtualPrice21).to.be.eq("1000280048778946864")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA()).to.be.eq(47)
+      expect(await swap.getAPrecise()).to.be.eq(4794)
+      const virtualPrice22 = await swap.getVirtualPrice()
+      expect(virtualPrice22).to.be.eq("1000099921096536212")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp2)
+      expect(await swap.getA()).to.be.eq(25)
+      expect(await swap.getAPrecise()).to.be.eq(2500)
+      const virtualPrice23 = await swap.getVirtualPrice()
+      expect(virtualPrice23).to.be.eq("996211052514898657")
+
+      // with more imbalance in liquidity, greater is the change in virtual price
+      const virtualPriceDiff2 = virtualPrice21.sub(virtualPrice23)
+      expect(virtualPriceDiff2).to.be.eq("4068996264048207")
+      const virtualPriceDiff1 = virtualPrice11.sub(virtualPrice13)
+      expect(virtualPriceDiff1).to.be.eq("1167571904171456")
+
+      // So, this verifies greater change in virtualPrice
+      expect(virtualPriceDiff2).to.be.gt(virtualPriceDiff1)
     })
 
     it("Reverts when non-owner calls it", async () => {
@@ -2856,6 +3142,149 @@ describe("Swap", async () => {
       expect(await swap.getVirtualPrice()).to.be.eq("1000167146429977312")
     })
 
+    it("Succeeds to ramp upwards 'Greater change in Virtual Price with more Imbalance while providing liquidity' in 1st direction", async () => {
+      // part-1
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to increase as A2 increases in 1st direction
+      // 1st direction: `addLiquidity(1e18, 0)`
+      await swap
+        .connect(user1)
+        .addLiquidity([String(1e18), String(1e9)], 0, MAX_UINT256/*, []*/)
+
+      const [
+        firstTokenBalanceBefore,
+        secondTokenBalanceBefore,
+        poolTokenBalanceBefore,
+      ] = await getUserTokenBalances(user1, [
+        firstToken,
+        secondToken,
+        swapToken,
+      ])
+
+      expect(poolTokenBalanceBefore).to.eq(
+        BigNumber.from("996865518332484753"),
+      )
+
+      const [
+        expectedFirstTokenAmount,
+        expectedSecondTokenAmount,
+      ] = await swap.calculateRemoveLiquidity(
+        user1Address,
+        poolTokenBalanceBefore,
+      )
+
+      expect(expectedFirstTokenAmount).to.eq(
+        BigNumber.from("665272106629035822"),
+      )
+      expect(expectedSecondTokenAmount).to.eq(
+        BigNumber.from("332636053647153964"),
+      )
+
+      // call rampA2(), changing A2 (from 70 set value in beforeEach()) to 100 within a span of 14 days
+      const endTimestamp1 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(100, endTimestamp1)
+
+      // +0 seconds since ramp A2
+      expect(await swap.getA2()).to.be.eq(70)
+      expect(await swap.getA2Precise()).to.be.eq(7000)
+      const virtualPrice11 = await swap.getVirtualPrice()
+      expect(virtualPrice11).to.be.eq("1000167020672683343")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA2()).to.be.eq(72)
+      expect(await swap.getA2Precise()).to.be.eq(7248)
+      const virtualPrice12 = await swap.getVirtualPrice()
+      expect(virtualPrice12).to.be.eq("1000196609804855938")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp1)
+      expect(await swap.getA2()).to.be.eq(100)
+      expect(await swap.getA2Precise()).to.be.eq(10000)
+      const virtualPrice13 = await swap.getVirtualPrice()
+      expect(virtualPrice13).to.be.eq("1000427602741765333")
+
+      // Now ramp is stopped automatically after 2 weeks
+
+      // So, remove liquidity for the part-2 to start fresh
+      // User 1 removes liquidity
+      await swapToken
+        .connect(user1)
+        .approve(swap.address, poolTokenBalanceBefore)
+      await swap
+        .connect(user1)
+        .removeLiquidity(
+          poolTokenBalanceBefore,
+          [expectedFirstTokenAmount, expectedSecondTokenAmount],
+          MAX_UINT256,
+        )
+
+      const [
+        firstTokenBalanceAfter,
+        secondTokenBalanceAfter,
+      ] = await getUserTokenBalances(user1, [firstToken, secondToken])
+
+      // Check the actual returned token amounts match the expected amounts
+      expect(firstTokenBalanceAfter.sub(firstTokenBalanceBefore)).to.eq(
+        expectedFirstTokenAmount,
+      )
+      expect(secondTokenBalanceAfter.sub(secondTokenBalanceBefore)).to.eq(
+        expectedSecondTokenAmount,
+      )
+
+      // Now, ramp down again to 70 w/o adding liquidity for part-2 to start fresh
+      // getA2Precise, getVirtalPrice only varies with liquidity addition. 
+      // So, not needed in this calculation, but ensure only A2 reaches to the desired value for part-2
+      const endTimestamp12 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(70, endTimestamp12)
+      await setTimestamp(endTimestamp12)
+      expect(await swap.getA2()).to.be.eq(70)
+
+
+      // -------------------------------------------------------------------------------------------------
+      // part-2
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to increase as A2 increases in 1st direction
+      // 1st direction: `addLiquidity(1e18, 0)`
+      await swap.addLiquidity([String(1e18), 0], 0, MAX_UINT256/*, []*/)
+
+      // call rampA2(), changing A2 (from 70 set value in beforeEach()) to 100 within a span of 14 days
+      const endTimestamp2 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(100, endTimestamp2)
+
+      // +0 seconds since ramp A2
+      expect(await swap.getA2()).to.be.eq(70)
+      expect(await swap.getA2Precise()).to.be.eq(7000)
+      const virtualPrice21 = await swap.getVirtualPrice()
+      expect(virtualPrice21).to.be.eq("1000279437266550490")
+
+      // set timestamp to +100000 seconds
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA2()).to.be.eq(72)
+      expect(await swap.getA2Precise()).to.be.eq(7248)
+      const virtualPrice22 = await swap.getVirtualPrice()
+      expect(virtualPrice22).to.be.eq("1000383904293708977")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp2)
+      expect(await swap.getA2()).to.be.eq(100)
+      expect(await swap.getA2Precise()).to.be.eq(10000)
+      const virtualPrice23 = await swap.getVirtualPrice()
+      expect(virtualPrice23).to.be.eq("1001201026040183527")
+
+      // with more imbalance in liquidity, greater is the change in virtual price
+      const virtualPriceDiff2 = virtualPrice23.sub(virtualPrice21)
+      expect(virtualPriceDiff2).to.be.eq("921588773633037")
+      const virtualPriceDiff1 = virtualPrice13.sub(virtualPrice11)
+      expect(virtualPriceDiff1).to.be.eq("260582069081990")
+
+      // So, this verifies greater change in virtualPrice
+      expect(virtualPriceDiff2).to.be.gt(virtualPriceDiff1)
+    })
+
     it("Succeeds to ramp downwards in 1st direction", async () => {
       // Create imbalanced pool to measure virtual price change
       // We expect virtual price to decrease as A2 decreases in 1st direction
@@ -2914,6 +3343,149 @@ describe("Swap", async () => {
       expect(await swap.getVirtualPrice()).to.be.eq("1000167146429977312")
     })
 
+    it("Succeeds to ramp downwards 'Greater change in Virtual Price with more Imbalance while providing liquidity' in 1st direction", async () => {
+      // part-1
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to decrease as A2 decreases in 1st direction
+      // 1st direction: `addLiquidity(1e18, 0)`
+      // await swap.addLiquidity([String(1e18), String(1e9)], 0, MAX_UINT256/*, []*/)
+      await swap
+        .connect(user1)
+        .addLiquidity([String(1e18), String(1e9)], 0, MAX_UINT256/*, []*/)
+
+      const [
+        firstTokenBalanceBefore,
+        secondTokenBalanceBefore,
+        poolTokenBalanceBefore,
+      ] = await getUserTokenBalances(user1, [
+        firstToken,
+        secondToken,
+        swapToken,
+      ])
+
+      expect(poolTokenBalanceBefore).to.eq(
+        BigNumber.from("996865518332484753"),
+      )
+
+      const [
+        expectedFirstTokenAmount,
+        expectedSecondTokenAmount,
+      ] = await swap.calculateRemoveLiquidity(
+        user1Address,
+        poolTokenBalanceBefore,
+      )
+
+      expect(expectedFirstTokenAmount).to.eq(
+        BigNumber.from("665272106629035822"),
+      )
+      expect(expectedSecondTokenAmount).to.eq(
+        BigNumber.from("332636053647153964"),
+      )
+
+      // call rampA2(), changing A2 (from 70 set value in beforeEach()) to 35 within a span of 14 days
+      const endTimestamp1 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(35, endTimestamp1)
+
+      // +0 seconds since ramp A2
+      expect(await swap.getA2()).to.be.eq(70)
+      expect(await swap.getA2Precise()).to.be.eq(7000)
+      const virtualPrice11 = await swap.getVirtualPrice()
+      expect(virtualPrice11).to.be.eq("1000167020672683343")
+
+      // set timestamp to +100000 seconds [OPTIONAL here]
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA2()).to.be.eq(67)
+      expect(await swap.getA2Precise()).to.be.eq(6711)
+      const virtualPrice12 = await swap.getVirtualPrice()
+      expect(virtualPrice12).to.be.eq("1000129828497411892")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp1)
+      expect(await swap.getA2()).to.be.eq(35)
+      expect(await swap.getA2Precise()).to.be.eq(3500)
+      const virtualPrice13 = await swap.getVirtualPrice()
+      expect(virtualPrice13).to.be.eq("999316859036790306")
+
+      // Now ramp is stopped automatically after 2 weeks
+
+      // So, remove liquidity for the part-2 to start fresh
+      // User 1 removes liquidity
+      await swapToken
+        .connect(user1)
+        .approve(swap.address, poolTokenBalanceBefore)
+      await swap
+        .connect(user1)
+        .removeLiquidity(
+          poolTokenBalanceBefore,
+          [expectedFirstTokenAmount, expectedSecondTokenAmount],
+          MAX_UINT256,
+        )
+
+      const [
+        firstTokenBalanceAfter,
+        secondTokenBalanceAfter,
+      ] = await getUserTokenBalances(user1, [firstToken, secondToken])
+
+      // Check the actual returned token amounts match the expected amounts
+      expect(firstTokenBalanceAfter.sub(firstTokenBalanceBefore)).to.eq(
+        expectedFirstTokenAmount,
+      )
+      expect(secondTokenBalanceAfter.sub(secondTokenBalanceBefore)).to.eq(
+        expectedSecondTokenAmount,
+      )
+
+      // Now, ramp up again to 70 w/o adding liquidity for part-2 to start fresh
+      // getA2Precise, getVirtalPrice only varies with liquidity addition. 
+      // So, not needed in this calculation, but ensure only A2 reaches to the desired value for part-2
+      const endTimestamp12 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(70, endTimestamp12)
+      await setTimestamp(endTimestamp12)
+      expect(await swap.getA2()).to.be.eq(70)
+
+
+      // -------------------------------------------------------------------------------------------------
+      // part-2
+      // Create imbalanced pool to measure virtual price change
+      // We expect virtual price to decrease as A2 decreases in 1st direction
+      // 1st direction: `addLiquidity(1e18, 0)`
+      await swap.addLiquidity([String(1e18), 0], 0, MAX_UINT256/*, []*/)
+
+      // call rampA2(), changing A2 (from 70 set value in beforeEach()) to 35 within a span of 14 days
+      const endTimestamp2 =
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
+      await swap.rampA2(35, endTimestamp2)
+
+      // +0 seconds since ramp A2
+      expect(await swap.getA2()).to.be.eq(70)
+      expect(await swap.getA2Precise()).to.be.eq(7000)
+      const virtualPrice21 = await swap.getVirtualPrice()
+      expect(virtualPrice21).to.be.eq("1000279437266550490")
+
+      // set timestamp to +100000 seconds [OPTIONAL here]
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
+      expect(await swap.getA2()).to.be.eq(67)
+      expect(await swap.getA2Precise()).to.be.eq(6711)
+      const virtualPrice22 = await swap.getVirtualPrice()
+      expect(virtualPrice22).to.be.eq("1000148191874983264")
+
+      // set timestamp to the end of ramp period
+      await setTimestamp(endTimestamp2)
+      expect(await swap.getA2()).to.be.eq(35)
+      expect(await swap.getA2Precise()).to.be.eq(3500)
+      const virtualPrice23 = await swap.getVirtualPrice()
+      expect(virtualPrice23).to.be.eq("997297082273128435")
+
+      // with more imbalance in liquidity, greater is the change in virtual price
+      const virtualPriceDiff2 = virtualPrice21.sub(virtualPrice23)
+      expect(virtualPriceDiff2).to.be.eq("2982354993422055")
+      const virtualPriceDiff1 = virtualPrice11.sub(virtualPrice13)
+      expect(virtualPriceDiff1).to.be.eq("850161635893037")
+
+      // So, this verifies greater change in virtualPrice
+      expect(virtualPriceDiff2).to.be.gt(virtualPriceDiff1)
+    })
 
     it("Reverts when non-owner calls it", async () => {
       await expect(
