@@ -57,6 +57,7 @@ describe("Swap with 2 tokens", () => {
 
   // Test Values
   const INITIAL_A_VALUE = 50
+  const INITIAL_A2_VALUE = 70
   const SWAP_FEE = 1e7
   const LP_TOKEN_NAME = "Test LP Token Name"
   const LP_TOKEN_SYMBOL = "TESTLP"
@@ -120,6 +121,7 @@ describe("Swap with 2 tokens", () => {
         LP_TOKEN_NAME,
         LP_TOKEN_SYMBOL,
         INITIAL_A_VALUE,
+        INITIAL_A2_VALUE,
         SWAP_FEE,
         0,
         0,
@@ -146,8 +148,8 @@ describe("Swap with 2 tokens", () => {
     await swap.addLiquidity(
       [String(50e18), String(50e18)],
       0,
-      MAX_UINT256,
-      getTestMerkleProof(ownerAddress),
+      MAX_UINT256/*,
+      getTestMerkleProof(ownerAddress),*/
     )
 
     expect(await swap.getTokenBalance(0)).to.be.eq(String(50e18))
@@ -163,7 +165,7 @@ describe("Swap with 2 tokens", () => {
         true,
       )
 
-      expect(calcTokenAmount).to.be.eq("999902922230274711")
+      expect(calcTokenAmount).to.be.eq("999930268025215805")
 
       // Add liquidity as user1
       await swap
@@ -171,13 +173,13 @@ describe("Swap with 2 tokens", () => {
         .addLiquidity(
           [String(1e18), 0],
           calcTokenAmount.mul(99).div(100),
-          (await getCurrentBlockTimestamp()) + 60,
-          [],
+          (await getCurrentBlockTimestamp()) + 60/*,
+          [],*/
         )
 
         // Verify swapToken balance
       expect(await swapToken.balanceOf(await user1.getAddress())).to.be.eq(
-        "999402921759022863",
+        "999430267684803071",
       )
     })
   })
@@ -216,7 +218,7 @@ describe("Swap with 2 tokens", () => {
         [String(1e18), 0],
         true,
       )
-      expect(calcTokenAmount).to.be.eq("999902922230274711")
+      expect(calcTokenAmount).to.be.eq("999930268025215805")
 
       // Add liquidity (1e18 DAI) as user1
       await swap
@@ -224,13 +226,13 @@ describe("Swap with 2 tokens", () => {
         .addLiquidity(
           [String(1e18), 0],
           calcTokenAmount.mul(99).div(100),
-          (await getCurrentBlockTimestamp()) + 60,
-          [],
+          (await getCurrentBlockTimestamp()) + 60/*,
+          [],*/
         )
 
       // Verify swapToken balance
       expect(await swapToken.balanceOf(await user1.getAddress())).to.be.eq(
-        "999402921759022863",
+        "999430267684803071",
       )
 
       // Calculate expected amounts of tokens user1 will receive
@@ -239,8 +241,8 @@ describe("Swap with 2 tokens", () => {
         "999355335447632820",
       )
 
-      expect(expectedAmounts[0]).to.be.eq("504627954556442854")
-      expect(expectedAmounts[1]).to.be.eq("494733288780826327")
+      expect(expectedAmounts[0]).to.be.eq("504627817926775188")
+      expect(expectedAmounts[1]).to.be.eq("494733154830171753")
       
       // Allow burn of swapToken
       await swapToken.connect(user1).approve(swap.address, "999355335447632820")
@@ -259,10 +261,10 @@ describe("Swap with 2 tokens", () => {
 
       // Verify the received amounts are correct
       expect(afterTokenBalances[0].sub(beforeTokenBalances[0])).to.be.eq(
-        "504627954556442854",
+        "504627817926775188",
       )
       expect(afterTokenBalances[1].sub(beforeTokenBalances[1])).to.be.eq(
-        "494733288780826327",
+        "494733154830171753",
       )
     })
   })

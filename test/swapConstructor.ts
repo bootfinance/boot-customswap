@@ -26,6 +26,7 @@ describe("Swap", () => {
 
   // Test Values
   const INITIAL_A_VALUE = 50
+  const INITIAL_A2_VALUE = 70
   const SWAP_FEE = 1e7
   const LP_TOKEN_NAME = "Test LP Token Name"
   const LP_TOKEN_SYMBOL = "TESTLP"
@@ -74,6 +75,7 @@ describe("Swap", () => {
             LP_TOKEN_NAME,
             LP_TOKEN_SYMBOL,
             INITIAL_A_VALUE,
+            INITIAL_A2_VALUE,
             SWAP_FEE,
             0,
             0,
@@ -94,6 +96,7 @@ describe("Swap", () => {
             LP_TOKEN_NAME,
             LP_TOKEN_SYMBOL,
             INITIAL_A_VALUE,
+            INITIAL_A2_VALUE,
             SWAP_FEE,
             0,
             0,
@@ -114,6 +117,7 @@ describe("Swap", () => {
             LP_TOKEN_NAME,
             LP_TOKEN_SYMBOL,
             INITIAL_A_VALUE,
+            INITIAL_A2_VALUE,
             SWAP_FEE,
             0,
             0,
@@ -134,6 +138,7 @@ describe("Swap", () => {
             LP_TOKEN_NAME,
             LP_TOKEN_SYMBOL,
             INITIAL_A_VALUE,
+            INITIAL_A2_VALUE,
             SWAP_FEE,
             0,
             0,
@@ -154,6 +159,7 @@ describe("Swap", () => {
             LP_TOKEN_NAME,
             LP_TOKEN_SYMBOL,
             INITIAL_A_VALUE,
+            INITIAL_A2_VALUE,
             SWAP_FEE,
             0,
             0,
@@ -174,6 +180,7 @@ describe("Swap", () => {
             LP_TOKEN_NAME,
             LP_TOKEN_SYMBOL,
             INITIAL_A_VALUE,
+            INITIAL_A2_VALUE,
             SWAP_FEE,
             0,
             0,
@@ -182,7 +189,7 @@ describe("Swap", () => {
       ).to.be.revertedWith("Token decimals exceeds max")
     })
 
-    it("Reverts with '_a exceeds maximum'", async () => {
+    it("Reverts with '_a not within the limits'", async () => {
       await expect(
         deployContractWithLibraries(
           owner,
@@ -194,12 +201,34 @@ describe("Swap", () => {
             LP_TOKEN_NAME,
             LP_TOKEN_SYMBOL,
             10e6 + 1,
+            INITIAL_A2_VALUE,
             SWAP_FEE,
             0,
             0,
           ],
         ),
-      ).to.be.revertedWith("_a exceeds maximum")
+      ).to.be.revertedWith("_a not within the limits")
+    })
+
+    it("Reverts with '_a2 not within the limits'", async () => {
+      await expect(
+        deployContractWithLibraries(
+          owner,
+          SwapArtifact,
+          { SwapUtils: swapUtils.address },
+          [
+            [firstToken.address, secondToken.address],
+            [18, 18],
+            LP_TOKEN_NAME,
+            LP_TOKEN_SYMBOL,
+            INITIAL_A_VALUE,
+            10e6 + 1,
+            SWAP_FEE,
+            0,
+            0,
+          ],
+        ),
+      ).to.be.revertedWith("_a2 not within the limits")
     })
 
     it("Reverts with '_fee exceeds maximum'", async () => {
@@ -214,6 +243,7 @@ describe("Swap", () => {
             LP_TOKEN_NAME,
             LP_TOKEN_SYMBOL,
             INITIAL_A_VALUE,
+            INITIAL_A2_VALUE,
             10e8 + 1,
             0,
             0,
@@ -234,6 +264,7 @@ describe("Swap", () => {
             LP_TOKEN_NAME,
             LP_TOKEN_SYMBOL,
             INITIAL_A_VALUE,
+            INITIAL_A2_VALUE,
             SWAP_FEE,
             10e10 + 1,
             0,
@@ -254,6 +285,7 @@ describe("Swap", () => {
             LP_TOKEN_NAME,
             LP_TOKEN_SYMBOL,
             INITIAL_A_VALUE,
+            INITIAL_A2_VALUE,
             SWAP_FEE,
             0,
             10e8 + 1,
