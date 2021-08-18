@@ -1,7 +1,7 @@
 // import { Allowlist } from "../../build/typechain/Allowlist"
 // import AllowlistArtifact from "../../build/artifacts/contracts/Allowlist.sol/Allowlist.json"
 import { BigNumber } from "@ethersproject/bignumber"
-import { GenericERC20 } from "../../build/typechain/GenericErc20"
+import { GenericERC20 } from "../../build/typechain/GenericERC20"
 import GenericERC20Artifact from "../../build/artifacts/contracts/helper/GenericERC20.sol/GenericERC20.json"
 import { MathUtils } from "../../build/typechain/MathUtils"
 import MathUtilsArtifact from "../../build/artifacts/contracts/MathUtils.sol/MathUtils.json"
@@ -17,6 +17,7 @@ import { ethers } from "hardhat"
 
 // Test Values
 const INITIAL_A_VALUE = 50
+const INITIAL_A2_VALUE = 70
 const SWAP_FEE = 1e7
 const ADMIN_FEE = 0
 const WITHDRAW_FEE = 5e7
@@ -44,6 +45,7 @@ async function deploySwap(): Promise<void> {
     ["Dai", "DAI", "18"],
   )) as GenericERC20
   await daiToken.deployed()
+  console.log(`DAI Token address: ${daiToken.address}`)
 
   const usdcToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -51,6 +53,7 @@ async function deploySwap(): Promise<void> {
     ["USDC Coin", "USDC", "6"],
   )) as GenericERC20
   await usdcToken.deployed()
+  console.log(`USDC Token address: ${usdcToken.address}`)
 
   const usdtToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -58,6 +61,7 @@ async function deploySwap(): Promise<void> {
     ["Tether", "USDT", "6"],
   )) as GenericERC20
   await usdtToken.deployed()
+  console.log(`USDT Token address: ${usdtToken.address}`)
 
   const susdToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -65,6 +69,7 @@ async function deploySwap(): Promise<void> {
     ["sUSD", "SUSD", "18"],
   )) as GenericERC20
   await susdToken.deployed()
+  console.log(`SUSD Token address: ${susdToken.address}`)
 
   const tbtcToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -72,6 +77,7 @@ async function deploySwap(): Promise<void> {
     ["tBTC", "TBTC", "18"],
   )) as GenericERC20
   await tbtcToken.deployed()
+  console.log(`TBTC Token address: ${tbtcToken.address}`)
 
   const wbtcToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -79,6 +85,7 @@ async function deploySwap(): Promise<void> {
     ["Wrapped Bitcoin", "WBTC", "8"],
   )) as GenericERC20
   await wbtcToken.deployed()
+  console.log(`WBTC Token address: ${wbtcToken.address}`)
 
   const renbtcToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -86,6 +93,7 @@ async function deploySwap(): Promise<void> {
     ["renBTC", "RENBTC", "8"],
   )) as GenericERC20
   await renbtcToken.deployed()
+  console.log(`RENBTC Token address: ${renbtcToken.address}`)
 
   const sbtcToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -93,6 +101,7 @@ async function deploySwap(): Promise<void> {
     ["sBTC", "SBTC", "18"],
   )) as GenericERC20
   await sbtcToken.deployed()
+  console.log(`SBTC Token address: ${sbtcToken.address}`)
 
   const tokens = [
     daiToken,
@@ -160,6 +169,7 @@ async function deploySwap(): Promise<void> {
       STABLECOIN_LP_TOKEN_NAME,
       STABLECOIN_LP_TOKEN_SYMBOL,
       INITIAL_A_VALUE,
+      INITIAL_A2_VALUE,
       SWAP_FEE,
       ADMIN_FEE,
       WITHDRAW_FEE/*,
@@ -183,6 +193,7 @@ async function deploySwap(): Promise<void> {
       BTC_LP_TOKEN_NAME,
       BTC_LP_TOKEN_SYMBOL,
       INITIAL_A_VALUE,
+      INITIAL_A2_VALUE,
       SWAP_FEE,
       ADMIN_FEE,
       WITHDRAW_FEE/*,
