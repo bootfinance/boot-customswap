@@ -14,10 +14,10 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 
 // Swap.sol constructor parameter values
 const TOKEN_ADDRESSES = [
-  "0x8daebade922df735c38c80c7ebd708af50815faa", // Mainnet tbtc
-  "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", // Mainnet wbtc
-  "0xeb4c2781e4eba804ce9a9803c67d0893436bb27d", // Mainnet renBTC
-  "0xfe18be6b3bd88a2d2a7f928d00292e7a9963cfc6", // Mainnet sBTC proxy
+  "0xA7AeF7Fb40019849609531E4cF6f05558Ed688B6", // Rinkeby tbtc
+  "0x5af59f281b3cfd0c12770e4633e6c16dd08ea543", // Rinkeby wbtc
+  "0xA6B983E5657d44acaBd3954ED1B47D0528733c09", // Rinkeby renBTC
+  "0xB77CB1c37E58a7f6bBfC18696545a953756455b0", // Rinkeby sBTC proxy
 ]
 const INITIAL_A_VALUE = 200
 const INITIAL_A2_VALUE = 250
@@ -29,8 +29,8 @@ const BTC_LP_TOKEN_SYMBOL = "saddleTWRenSBTC"
 
 // Multisig address to own the btc swap pool
 // List of signers can be found here: https://docs.saddle.finance/faq#who-controls-saddles-admin-keys
-// https://gnosis-safe.io/app/#/safes/0x3F8E527aF4e0c6e763e8f368AC679c44C45626aE/settings
-const MULTISIG_ADDRESS = "0x3F8E527aF4e0c6e763e8f368AC679c44C45626aE"
+// https://gnosis-safe.io/app/#/safes/0x186B2E003Aa42C9Df56BBB643Bb9550D1a45a360/settings
+const MULTISIG_ADDRESS = "0x186B2E003Aa42C9Df56BBB643Bb9550D1a45a360"
 
 // To run this script and deploy the contracts on the mainnet:
 //    npx hardhat run deployment/onchain/swap-mainnet.ts --network mainnet
@@ -127,5 +127,5 @@ async function deploySwap(): Promise<void> {
 }
 
 deploySwap().then(() => {
-  console.log("Successfully deployed contracts to on-chain network...")
+  console.log("Successfully deployed contracts to rinkeby network...")
 })

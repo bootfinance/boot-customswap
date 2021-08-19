@@ -45,7 +45,6 @@ async function deploySwap(): Promise<void> {
     ["Dai", "DAI", "18"],
   )) as GenericERC20
   await daiToken.deployed()
-  console.log(`DAI Token address: ${daiToken.address}`)
 
   const usdcToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -53,7 +52,6 @@ async function deploySwap(): Promise<void> {
     ["USDC Coin", "USDC", "6"],
   )) as GenericERC20
   await usdcToken.deployed()
-  console.log(`USDC Token address: ${usdcToken.address}`)
 
   const usdtToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -61,7 +59,6 @@ async function deploySwap(): Promise<void> {
     ["Tether", "USDT", "6"],
   )) as GenericERC20
   await usdtToken.deployed()
-  console.log(`USDT Token address: ${usdtToken.address}`)
 
   const susdToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -69,7 +66,6 @@ async function deploySwap(): Promise<void> {
     ["sUSD", "SUSD", "18"],
   )) as GenericERC20
   await susdToken.deployed()
-  console.log(`SUSD Token address: ${susdToken.address}`)
 
   const tbtcToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -77,7 +73,6 @@ async function deploySwap(): Promise<void> {
     ["tBTC", "TBTC", "18"],
   )) as GenericERC20
   await tbtcToken.deployed()
-  console.log(`TBTC Token address: ${tbtcToken.address}`)
 
   const wbtcToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -85,7 +80,6 @@ async function deploySwap(): Promise<void> {
     ["Wrapped Bitcoin", "WBTC", "8"],
   )) as GenericERC20
   await wbtcToken.deployed()
-  console.log(`WBTC Token address: ${wbtcToken.address}`)
 
   const renbtcToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -93,7 +87,6 @@ async function deploySwap(): Promise<void> {
     ["renBTC", "RENBTC", "8"],
   )) as GenericERC20
   await renbtcToken.deployed()
-  console.log(`RENBTC Token address: ${renbtcToken.address}`)
 
   const sbtcToken = (await deployContract(
     (owner as unknown) as Wallet,
@@ -101,7 +94,6 @@ async function deploySwap(): Promise<void> {
     ["sBTC", "SBTC", "18"],
   )) as GenericERC20
   await sbtcToken.deployed()
-  console.log(`SBTC Token address: ${sbtcToken.address}`)
 
   const tokens = [
     daiToken,

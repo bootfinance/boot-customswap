@@ -1,8 +1,8 @@
-import { GenericERC20 } from "../../build/typechain/GenericErc20"
+import { GenericERC20 } from "../../build/typechain/GenericERC20"
 import GenericERC20Artifact from "../../build/artifacts/contracts/helper/GenericERC20.sol/GenericERC20.json"
 import { Swap } from "../../build/typechain/Swap"
 import SwapArtifact from "../../build/artifacts/contracts/Swap.sol/Swap.json"
-import { LPToken } from "../../build/typechain/LpToken"
+import { LPToken } from "../../build/typechain/LPToken"
 import LPTokenArtifact from "../../build/artifacts/contracts/LPToken.sol/LPToken.json"
 import { ethers, network } from "hardhat"
 import dotenv from "dotenv"
@@ -16,6 +16,7 @@ const WBTC = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
 const RENBTC = "0xeb4c2781e4eba804ce9a9803c67d0893436bb27d"
 const SBTC = "0xfe18be6b3bd88a2d2a7f928d00292e7a9963cfc6"
 
+// forking Mainnet at this block
 const BLOCK_NUMBER = 11772093
 
 dotenv.config()
