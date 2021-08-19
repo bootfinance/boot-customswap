@@ -1,6 +1,10 @@
 // import { Allowlist } from "../../build/typechain/Allowlist"
 // import AllowlistArtifact from "../../build/artifacts/contracts/Allowlist.sol/Allowlist.json"
 import { BigNumber } from "@ethersproject/bignumber"
+// import { BigNumber} from "ethers"
+
+import { GenericERC20 } from "../../build/typechain/GenericERC20"
+import GenericERC20Artifact from "../../build/artifacts/contracts/helper/GenericERC20.sol/GenericERC20.json"
 import { MathUtils } from "../../build/typechain/MathUtils"
 import MathUtilsArtifact from "../../build/artifacts/contracts/MathUtils.sol/MathUtils.json"
 import { Swap } from "../../build/typechain/Swap"
@@ -12,11 +16,6 @@ import { deployContractWithLibraries } from "../../test/testUtils"
 import { ethers } from "hardhat"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address"
 
-// Swap.sol constructor parameter values
-const TOKEN_ADDRESSES = [
-  "0x8e1beb215647579964a24348d8698b17d5ac7c26", // Rinkeby FRAX
-  "0x1be96dcfe17a41572b397aa7cd1a38de57e0159a", // Rinkeby FXS
-]
 const INITIAL_A_VALUE = 200
 const INITIAL_A2_VALUE = 250
 const SWAP_FEE = 4e6 // 4bps
@@ -39,6 +38,46 @@ const MULTISIG_ADDRESS = "0x186B2E003Aa42C9Df56BBB643Bb9550D1a45a360"
 async function deploySwap(): Promise<void> {
   const [deployer]: SignerWithAddress[] = await ethers.getSigners()
   console.log(`Deploying with ${deployer.address}`)
+
+  // Deploy FRAX token
+  const fraxToken = (await deployContract(
+    deployer,
+    GenericERC20Artifact,
+    ["Frax", "FRAX", "18"],
+  )) as GenericERC20
+  await fraxToken.deployed()
+  console.log(`FRAX token address: ${fraxToken.address}`)
+
+  // Deploy FRX token
+  const fxsToken = (await deployContract(
+    deployer,
+    GenericERC20Artifact,
+    ["Frax Share", "FXS", "18"],
+  )) as GenericERC20
+  await fxsToken.deployed()
+  console.log(`FXS token address: ${fxsToken.address}`)
+
+  // Mint 100 M = 1e26 FRAX tokens
+  // await fraxToken.mint(deployer.address, String(BigNumber.from(String(1e26))))
+  await fraxToken.mint(deployer.address, BigNumber.from("100000000000000000000000000"))
+
+  // Mint 100 M = 1e26 FXS tokens
+  // await fxsToken.mint(deployer.address, String(BigNumber.from(String(1e26))))
+  await fxsToken.mint(deployer.address, BigNumber.from("100000000000000000000000000"))
+
+  // for minting to multiple addresses
+  // await asyncForEach([deployer, user1, user2], async (signer) => {
+  //   const address = await signer.getAddress()
+  //   await fraxToken.mint(address, String(1e26))
+  //   await fxsToken.mint(address, String(1e26))
+  // })
+
+
+  // Swap.sol constructor parameter values
+  const TOKEN_ADDRESSES = [
+    fraxToken.address, // Rinkeby FRAX
+    fxsToken.address,  // Rinkeby FXS
+  ]
 
   // Deploy Allowlist
   // Estimated deployment cost = 0.00081804 * gwei
@@ -109,7 +148,7 @@ async function deploySwap(): Promise<void> {
     BigNumber.from(10).pow(18),
   )
 */
-  await fraxSwap.deployed()
+  // await fraxSwap.deployed()
   const fraxLpToken = (await fraxSwap.swapStorage()).lpToken
 
   console.log(`Tokenized FRAX/FXS swap address: ${fraxSwap.address}`)
