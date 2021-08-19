@@ -30,10 +30,10 @@ var config = {
         coverage: {
             url: "http://127.0.0.1:8555",
         },
-        mainnet: {
-            url: process.env.ALCHEMY_API,
-            gasPrice: 55 * 1000000000,
-        },
+        // mainnet: {
+        //   url: process.env.ALCHEMY_API,
+        //   gasPrice: 55 * 1000000000,
+        // },
     },
     paths: {
         artifacts: "./build/artifacts",
