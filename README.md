@@ -45,6 +45,14 @@ $ npx hardhat run --network localhost deployment/hardhat/swap.ts
 You can connect to this RPC server via `localhost:8545`.
 
 ### Deploying contracts to Rinkeby Testnet
+* Environment variables
+	- Create a `.env` file with its values:
+```
+DEPLOYER_PRIVATE_KEY=<private_key_without_0x>
+INFURA_API_KEY=<SECRET_KEY>
+REPORT_GAS=<true_or_false>
+```
+
 #### BTC tokens pool
 ```bash
 $ npx hardhat run deployment/rinkeby/swap-btc.ts --network rinkeby
