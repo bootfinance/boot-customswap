@@ -44,6 +44,17 @@ $ npx hardhat run --network localhost deployment/hardhat/swap.ts
 
 You can connect to this RPC server via `localhost:8545`.
 
+### Deploying contracts to Rinkeby Testnet
+#### BTC tokens pool
+```bash
+$ npx hardhat run deployment/rinkeby/swap-btc.ts --network rinkeby
+```
+
+#### FRAX-FXS pool
+```bash
+$ npx hardhat run deployment/rinkeby/swap-frax.ts --network rinkeby
+```
+
 ### Generating GitBook docs
 
 ```bash
