@@ -5246,7 +5246,7 @@ describe("Swap", async () => {
             // The attack did not benefit the attacker.
           })
 
-          it.only("Attack fails with 2 weeks between transactions (mimics rapid A change)", async () => {
+          it("Attack fails with 2 weeks between transactions (mimics rapid A change)", async () => {
             // This test assumes there are no other transactions during the 2 weeks period of ramping down.
             // Purpose of this test case is to mimic rapid ramp down of A.
 
