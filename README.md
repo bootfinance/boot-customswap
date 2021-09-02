@@ -48,7 +48,7 @@ You can connect to this RPC server via `localhost:8545`.
 * Environment variables
 	- Create a `.env` file with its values:
 ```
-DEPLOYER_PRIVATE_KEY=<private_key_without_0x>
+DEPLOYER_PRIVATE_KEY_RINKEBY=<private_key_without_0x>
 INFURA_API_KEY=<SECRET_KEY>
 REPORT_GAS=<true_or_false>
 ```
