@@ -73,6 +73,12 @@ library SwapUtils {
     event StopRampA2(uint256 currentA2, uint256 time);
 
     struct Swap {
+        // Target price
+        uint256 lastTargetPrice;
+        uint256 initialTargetPrice;
+        uint256 futureTargetPrice;
+        uint256 initialTargetPriceTime;
+        uint256 futureTargetPriceTime;
         // variables around the ramp management of A,
         // the amplification coefficient * n * (n - 1)
         // see https://www.curve.fi/stableswap-paper.pdf for details
@@ -206,6 +212,37 @@ library SwapUtils {
         if (block.timestamp < t1) {
             uint256 t0 = self.initialATime; // time when ramp is started
             uint256 a0 = self.initialA; // initial A value when ramp is started
+            if (a1 > a0) {
+                // a0 + (a1 - a0) * (block.timestamp - t0) / (t1 - t0)
+                return
+                    a0.add(
+                        a1.sub(a0).mul(block.timestamp.sub(t0)).div(t1.sub(t0))
+                    );
+            } else {
+                // a0 - (a0 - a1) * (block.timestamp - t0) / (t1 - t0)
+                return
+                    a0.sub(
+                        a0.sub(a1).mul(block.timestamp.sub(t0)).div(t1.sub(t0))
+                    );
+            }
+        } else {
+            return a1;
+        }
+    }
+
+    /**
+     * @notice Calculates and returns Target Price based on the ramp settings
+     * @dev See the StableSwap paper for details
+     * @param self Swap struct to read from
+     * @return Target Price parameter in its raw precision form
+     */
+    function _setTargetPricePrecise(Swap storage self) internal view returns (uint256) {
+        uint256 t1 = self.futureTargetPriceTime; // time when ramp is finished
+        uint256 a1 = self.futureTargetPrice; // final Target Price value when ramp is finished
+
+        if (block.timestamp < t1) {
+            uint256 t0 = self.initialTargetPriceTime; // time when ramp is started
+            uint256 a0 = self.initialTargetPrice; // initial Target Price value when ramp is started
             if (a1 > a0) {
                 // a0 + (a1 - a0) * (block.timestamp - t0) / (t1 - t0)
                 return
@@ -1466,6 +1503,60 @@ library SwapUtils {
     }
 
     /**
+     * @notice Start ramping up or down target price towards given futureTargetPrice_ and futureTime_
+     * Checks if the change is too rapid, and commits the new target price value only when it falls under
+     * the limit range.
+     * @param self Swap struct to update
+     * @param futureTargetPrice_ the new target price to ramp towards
+     * @param futureTime_ timestamp when the new target price should be reached
+     */
+    function rampTargetPrice(
+        Swap storage self,
+        uint256 futureTargetPrice_,
+        uint256 futureTime_
+    ) external {
+        require(
+            block.timestamp >= self.initialATime.add(1 days),
+            "Wait 1 day before starting ramp"
+        );
+        require(
+            futureTime_ >= block.timestamp.add(MIN_RAMP_TIME),
+            "Insufficient ramp time"
+        );
+        require(
+            futureTargetPrice_ >= 0,
+            "futureTargetPrice_ must be >= 0"
+        );
+
+        uint256 initialTargetPricePrecise = _setTargetPricePrecise(self);
+        uint256 futureTargetPricePrecise = futureTargetPrice_.mul(A_PRECISION);
+
+        if (futureTargetPricePrecise < initialTargetPricePrecise) {
+            require(
+                futureTargetPricePrecise.mul(MAX_A_CHANGE) >= initialTargetPricePrecise,
+                "futureTargetPrice_ is too small"
+            );
+        } else {
+            require(
+                futureTargetPricePrecise <= initialTargetPricePrecise.mul(MAX_A_CHANGE),
+                "futureTargetPrice_ is too large"
+            );
+        }
+
+        self.initialTargetPrice = initialTargetPricePrecise;
+        self.futureTargetPrice = futureTargetPricePrecise;
+        self.initialTargetPriceTime = block.timestamp;
+        self.futureTargetPriceTime = futureTime_;
+
+        emit RampA(
+            initialTargetPricePrecise,
+            futureTargetPricePrecise,
+            block.timestamp,
+            futureTime_
+        );
+    }
+
+    /**
      * @notice Start ramping up or down A parameter towards given futureA_ and futureTime_
      * Checks if the change is too rapid, and commits the new A value only when it falls under
      * the limit range.
@@ -1571,6 +1662,23 @@ library SwapUtils {
             block.timestamp,
             futureTime_
         );
+    }
+
+    /**
+     * @notice Stops ramping Target price immediately. Once this function is called, rampTargetPrce()
+     * cannot be called for another 24 hours
+     * @param self Swap struct to update
+     */
+    function stopRampTargetPrice(Swap storage self) external {
+        require(self.futureTargetPriceTime > block.timestamp, "Ramp is already stopped");
+        uint256 currentTargetPrice = _setTargetPricePrecise(self);
+
+        self.initialTargetPrice = currentTargetPrice;
+        self.futureTargetPrice = currentTargetPrice;
+        self.initialTargetPriceTime = block.timestamp;
+        self.futureTargetPriceTime = block.timestamp;
+
+        emit StopRampA(currentTargetPrice, block.timestamp);
     }
 
     /**

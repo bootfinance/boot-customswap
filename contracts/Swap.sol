@@ -49,6 +49,9 @@ contract Swap is OwnerPausable, ReentrancyGuard {
     // getTokenIndex function also relies on this mapping to retrieve token index.
     mapping(address => uint8) private tokenIndexes;
 
+    uint256[2] originalPrecisionMultipliers;
+    uint256[2] customPrecisionMultipliers;
+
     /*** EVENTS ***/
 
     // events replicated from SwapUtils to make the ABI easier for dumb
@@ -135,7 +138,8 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         uint256 _a2,
         uint256 _fee,
         uint256 _adminFee,
-        uint256 _withdrawFee
+        uint256 _withdrawFee,
+        uint256 _customTargetPrice
         // IAllowlist _allowlist
     ) public OwnerPausable() ReentrancyGuard() {
         // Check _pooledTokens and precisions parameter
@@ -146,7 +150,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
             "_pooledTokens decimals mismatch"
         );
 
-        uint256[] memory precisionMultipliers = new uint256[](decimals.length);
+        // uint256[] memory originalPrecisionMultipliers = new uint256[](decimals.length);
 
         for (uint8 i = 0; i < _pooledTokens.length; i++) {
             if (i > 0) {
@@ -165,13 +169,17 @@ contract Swap is OwnerPausable, ReentrancyGuard {
                 decimals[i] <= SwapUtils.POOL_PRECISION_DECIMALS,
                 "Token decimals exceeds max"
             );
-            precisionMultipliers[i] =
+            originalPrecisionMultipliers[i] =
                 10 **
                     uint256(SwapUtils.POOL_PRECISION_DECIMALS).sub(
                         uint256(decimals[i])
                     );
+
             tokenIndexes[address(_pooledTokens[i])] = i;
         }
+
+        customPrecisionMultipliers[0] = originalPrecisionMultipliers[0].mul(_customTargetPrice).div(10 ** 18);
+        customPrecisionMultipliers[1] = originalPrecisionMultipliers[1];
 
         // Check _a, _a2 _fee, _adminFee, _withdrawFee, _allowlist parameters
         require(_a >= 0 && _a <= SwapUtils.MAX_A, "_a not within the limits");
@@ -197,8 +205,9 @@ contract Swap is OwnerPausable, ReentrancyGuard {
             SwapUtils.POOL_PRECISION_DECIMALS
         );
         swapStorage.pooledTokens = _pooledTokens;
-        swapStorage.tokenPrecisionMultipliers = precisionMultipliers;
+        swapStorage.tokenPrecisionMultipliers = originalPrecisionMultipliers;
         swapStorage.balances = new uint256[](_pooledTokens.length);
+        swapStorage.customTargetPrice = _customTargetPrice;
         swapStorage.initialA = _a.mul(SwapUtils.A_PRECISION);
         swapStorage.futureA = _a.mul(SwapUtils.A_PRECISION);
         swapStorage.initialATime = 0;
@@ -602,6 +611,18 @@ contract Swap is OwnerPausable, ReentrancyGuard {
     function setDefaultWithdrawFee(uint256 newWithdrawFee) external onlyOwner {
         swapStorage.setDefaultWithdrawFee(newWithdrawFee);
     }
+
+    /**
+     * @notice Start ramping up or down Target price towards given futureTargetPrice and futureTime
+     * Checks if the change is too rapid, and commits the new Target price value only when it falls under
+     * the limit range.
+     * @param futureTargetPrice the new target price to ramp towards
+     * @param futureTime timestamp when the new target price should be reached
+     */
+    function rampTargetPrice(uint256 futureTargetPrice, uint256 futureTime) external onlyOwner {
+        swapStorage.rampTargetPrice(futureTargetPrice, futureTime);
+    }
+
 
     /**
      * @notice Start ramping up or down A parameter towards given futureA and futureTime
