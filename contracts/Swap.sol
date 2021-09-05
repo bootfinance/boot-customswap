@@ -647,6 +647,14 @@ contract Swap is OwnerPausable, ReentrancyGuard {
     }
 
     /**
+     * @notice Stop ramping Target Price immediately. Reverts if ramp Target Price is already stopped.
+     */
+    function stopRampTargetPrice() external onlyOwner {
+        swapStorage.stopRampTargetPrice();
+    }
+
+
+    /**
      * @notice Stop ramping A immediately. Reverts if ramp A is already stopped.
      */
     function stopRampA() external onlyOwner {
