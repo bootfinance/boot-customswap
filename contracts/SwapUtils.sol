@@ -239,26 +239,33 @@ library SwapUtils {
     function _setTargetPricePrecise(Swap storage self) internal view returns (uint256) {
         uint256 t1 = self.futureTargetPriceTime; // time when ramp is finished
         uint256 a1 = self.futureTargetPrice; // final Target Price value when ramp is finished
+        uint256 newTargetPrice;
 
         if (block.timestamp < t1) {
             uint256 t0 = self.initialTargetPriceTime; // time when ramp is started
             uint256 a0 = self.initialTargetPrice; // initial Target Price value when ramp is started
             if (a1 > a0) {
                 // a0 + (a1 - a0) * (block.timestamp - t0) / (t1 - t0)
-                return
-                    a0.add(
+                newTargetPrice = a0.add(
                         a1.sub(a0).mul(block.timestamp.sub(t0)).div(t1.sub(t0))
                     );
             } else {
                 // a0 - (a0 - a1) * (block.timestamp - t0) / (t1 - t0)
-                return
-                    a0.sub(
+                newTargetPrice = a0.sub(
                         a0.sub(a1).mul(block.timestamp.sub(t0)).div(t1.sub(t0))
                     );
             }
+
         } else {
-            return a1;
+            newTargetPrice = a1;
         }
+
+        // normalization
+        newCustomPrecisionMultipliers = originalPrecisionMultipliers[0].mul(newTargetPrice).div(10 ** 18);
+        self.pooledTokens[0] = (self.pooledTokens[0].mul(newCustomPrecisionMultipliers).div(self.tokenPrecisionMultipliers[0]))
+        self.tokenPrecisionMultipliers[0] = newCustomPrecisionMultipliers;
+
+        return newTargetPrice;
     }
 
     /**

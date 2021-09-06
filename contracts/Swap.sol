@@ -143,8 +143,8 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         // IAllowlist _allowlist
     ) public OwnerPausable() ReentrancyGuard() {
         // Check _pooledTokens and precisions parameter
-        require(_pooledTokens.length > 1, "_pooledTokens.length <= 1");
-        require(_pooledTokens.length <= 32, "_pooledTokens.length > 32");
+        require(_pooledTokens.length == 2, "_pooledTokens.length must be 2 in length");
+        require(decimals.length == 2, "decimals.length must be 2 in length");
         require(
             _pooledTokens.length == decimals.length,
             "_pooledTokens decimals mismatch"
@@ -205,7 +205,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
             SwapUtils.POOL_PRECISION_DECIMALS
         );
         swapStorage.pooledTokens = _pooledTokens;
-        swapStorage.tokenPrecisionMultipliers = originalPrecisionMultipliers;
+        swapStorage.tokenPrecisionMultipliers = customPrecisionMultipliers;
         swapStorage.balances = new uint256[](_pooledTokens.length);
         swapStorage.customTargetPrice = _customTargetPrice;
         swapStorage.initialA = _a.mul(SwapUtils.A_PRECISION);
