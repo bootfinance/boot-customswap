@@ -63,8 +63,9 @@ describe("Swap", async () => {
   }
 
   // Test Values
-  const INITIAL_A_VALUE = 50
-  const INITIAL_A2_VALUE = 70
+  const INITIAL_A_VALUE = 1
+  const INITIAL_A2_VALUE = 85
+  const INITIAL_CUSTOM_TARGET_PRICE_VALUE = 4
   const SWAP_FEE = 1e7
   const LP_TOKEN_NAME = "Test LP Token Name"
   const LP_TOKEN_SYMBOL = "TESTLP"
