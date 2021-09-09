@@ -49,8 +49,8 @@ contract Swap is OwnerPausable, ReentrancyGuard {
     // getTokenIndex function also relies on this mapping to retrieve token index.
     mapping(address => uint8) private tokenIndexes;
 
-    uint256[2] originalPrecisionMultipliers;
-    uint256[2] customPrecisionMultipliers;
+    // uint256[2] originalPrecisionMultipliers;
+    // uint256[2] customPrecisionMultipliers;
 
     /*** EVENTS ***/
 
@@ -169,7 +169,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
                 decimals[i] <= SwapUtils.POOL_PRECISION_DECIMALS,
                 "Token decimals exceeds max"
             );
-            originalPrecisionMultipliers[i] =
+            swapStorage.originalPrecisionMultipliers[i] =
                 10 **
                     uint256(SwapUtils.POOL_PRECISION_DECIMALS).sub(
                         uint256(decimals[i])
@@ -178,8 +178,9 @@ contract Swap is OwnerPausable, ReentrancyGuard {
             tokenIndexes[address(_pooledTokens[i])] = i;
         }
 
-        customPrecisionMultipliers[0] = originalPrecisionMultipliers[0].mul(_customTargetPrice).div(10 ** 18);
-        customPrecisionMultipliers[1] = originalPrecisionMultipliers[1];
+        uint256[2] memory customPrecisionMultipliers;
+        customPrecisionMultipliers[0] = swapStorage.originalPrecisionMultipliers[0].mul(_customTargetPrice).div(10 ** 18);
+        customPrecisionMultipliers[1] = swapStorage.originalPrecisionMultipliers[1];
 
         // Check _a, _a2 _fee, _adminFee, _withdrawFee, _allowlist parameters
         require(_a >= 0 && _a <= SwapUtils.MAX_A, "_a not within the limits");

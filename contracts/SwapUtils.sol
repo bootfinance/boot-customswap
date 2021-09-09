@@ -102,6 +102,7 @@ library SwapUtils {
         // for example, TBTC has 18 decimals, so the multiplier should be 1. WBTC
         // has 8, so the multiplier should be 10 ** 18 / 10 ** 8 => 10 ** 10
         uint256[] tokenPrecisionMultipliers;
+        uint256[2] originalPrecisionMultipliers;
         // the pool balance of each token, in the token's precision
         // the contract's actual token balance might differ
         uint256[] balances;
@@ -261,9 +262,9 @@ library SwapUtils {
         }
 
         // normalization
-        newCustomPrecisionMultipliers = originalPrecisionMultipliers[0].mul(newTargetPrice).div(10 ** 18);
-        self.pooledTokens[0] = (self.pooledTokens[0].mul(newCustomPrecisionMultipliers).div(self.tokenPrecisionMultipliers[0]))
-        self.tokenPrecisionMultipliers[0] = newCustomPrecisionMultipliers;
+        uint256 newCustomPrecisionMultiplier = self.originalPrecisionMultipliers[0].mul(newTargetPrice).div(10 ** 18);
+        self.pooledTokens[0] = (self.pooledTokens[0].mul(newCustomPrecisionMultiplier).div(self.tokenPrecisionMultipliers[0]));
+        self.tokenPrecisionMultipliers[0] = newCustomPrecisionMultiplier;
 
         return newTargetPrice;
     }
