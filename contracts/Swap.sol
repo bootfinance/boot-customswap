@@ -139,7 +139,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         uint256 _fee,
         uint256 _adminFee,
         uint256 _withdrawFee,
-        uint256 _customTargetPrice
+        uint256 _targetPrice
         // IAllowlist _allowlist
     ) public OwnerPausable() ReentrancyGuard() {
         // Check _pooledTokens and precisions parameter
@@ -179,7 +179,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         }
 
         uint256[2] memory customPrecisionMultipliers;
-        customPrecisionMultipliers[0] = swapStorage.originalPrecisionMultipliers[0].mul(_customTargetPrice).div(10 ** 18);
+        customPrecisionMultipliers[0] = swapStorage.originalPrecisionMultipliers[0].mul(_targetPrice).div(10 ** 18);
         customPrecisionMultipliers[1] = swapStorage.originalPrecisionMultipliers[1];
 
         // Check _a, _a2 _fee, _adminFee, _withdrawFee, _allowlist parameters
@@ -208,15 +208,22 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         swapStorage.pooledTokens = _pooledTokens;
         swapStorage.tokenPrecisionMultipliers = customPrecisionMultipliers;
         swapStorage.balances = new uint256[](_pooledTokens.length);
-        swapStorage.customTargetPrice = _customTargetPrice;
+        
+        swapStorage.initialTargetPrice = _targetPrice/*.mul(SwapUtils.TARGET_PRICE_PRECISION)*/;
+        swapStorage.futureTargetPrice = _targetPrice/*.mul(SwapUtils.TARGET_PRICE_PRECISION)*/;
+        swapStorage.initialTargetPriceTime = 0;
+        swapStorage.futureTargetPriceTime = 0;
+
         swapStorage.initialA = _a.mul(SwapUtils.A_PRECISION);
         swapStorage.futureA = _a.mul(SwapUtils.A_PRECISION);
         swapStorage.initialATime = 0;
         swapStorage.futureATime = 0;
+        
         swapStorage.initialA2 = _a2.mul(SwapUtils.A_PRECISION);
         swapStorage.futureA2 = _a2.mul(SwapUtils.A_PRECISION);
         swapStorage.initialA2Time = 0;
         swapStorage.futureA2Time = 0;
+        
         swapStorage.swapFee = _fee;
         swapStorage.adminFee = _adminFee;
         swapStorage.defaultWithdrawFee = _withdrawFee;

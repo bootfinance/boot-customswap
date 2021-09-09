@@ -57,6 +57,12 @@ library SwapUtils {
     event NewAdminFee(uint256 newAdminFee);
     event NewSwapFee(uint256 newSwapFee);
     event NewWithdrawFee(uint256 newWithdrawFee);
+    event RampTargetPrice(
+        uint256 oldTargetPrice,
+        uint256 newTargetPrice,
+        uint256 initialTime,
+        uint256 futureTime
+    );
     event RampA(
         uint256 oldA,
         uint256 newA,
@@ -69,12 +75,13 @@ library SwapUtils {
         uint256 initialA2Time,
         uint256 futureA2Time
     );
+    event StopRampTargetPrice(uint256 currentTargetPrice, uint256 time);
     event StopRampA(uint256 currentA, uint256 time);
     event StopRampA2(uint256 currentA2, uint256 time);
 
     struct Swap {
         // Target price
-        uint256 lastTargetPrice;
+        // uint256 lastTargetPrice;
         uint256 initialTargetPrice;
         uint256 futureTargetPrice;
         uint256 initialTargetPriceTime;
@@ -100,7 +107,7 @@ library SwapUtils {
         IERC20[] pooledTokens;
         // multipliers for each pooled token's precision to get to POOL_PRECISION_DECIMALS
         // for example, TBTC has 18 decimals, so the multiplier should be 1. WBTC
-        // has 8, so the multiplier should be 10 ** 18 / 10 ** 8 => 10 ** 10
+        // has 8, so the multiplier should be 10**18 / 10 ** 8 => 10 ** 10
         uint256[] tokenPrecisionMultipliers;
         uint256[2] originalPrecisionMultipliers;
         // the pool balance of each token, in the token's precision
@@ -138,6 +145,9 @@ library SwapUtils {
         uint256 preciseA;
     }
 
+    // in wei
+    // uint256 private constant 10**18 = 10**18;
+
     // the precision all pools tokens will be converted to
     uint8 public constant POOL_PRECISION_DECIMALS = 18;
 
@@ -163,9 +173,11 @@ library SwapUtils {
     uint256 private constant MAX_LOOP_LIMIT = 256;
 
     // Constant values used in ramping A calculations
+    // uint256 public constant TARGET_PRICE_PRECISION = 1;               // Target price will be provided in wei units. So, this value is set to 1.
     uint256 public constant A_PRECISION = 100;
     uint256 public constant MAX_A = 10**6;
     uint256 private constant MAX_A_CHANGE = 2;
+    // uint256 private constant MAX_RELATIVE_PRICE_CHANGE = 10**16;     // in wei
     uint256 private constant MIN_RAMP_TIME = 14 days;
 
     /*** VIEW & PURE FUNCTIONS ***/
@@ -237,7 +249,7 @@ library SwapUtils {
      * @param self Swap struct to read from
      * @return Target Price parameter in its raw precision form
      */
-    function _setTargetPricePrecise(Swap storage self) internal view returns (uint256) {
+    function _getTargetPricePrecise(Swap storage self) internal view returns (uint256) {
         uint256 t1 = self.futureTargetPriceTime; // time when ramp is finished
         uint256 a1 = self.futureTargetPrice; // final Target Price value when ramp is finished
         uint256 newTargetPrice;
@@ -260,11 +272,6 @@ library SwapUtils {
         } else {
             newTargetPrice = a1;
         }
-
-        // normalization
-        uint256 newCustomPrecisionMultiplier = self.originalPrecisionMultipliers[0].mul(newTargetPrice).div(10 ** 18);
-        self.pooledTokens[0] = (self.pooledTokens[0].mul(newCustomPrecisionMultiplier).div(self.tokenPrecisionMultipliers[0]));
-        self.tokenPrecisionMultipliers[0] = newCustomPrecisionMultiplier;
 
         return newTargetPrice;
     }
@@ -1536,17 +1543,17 @@ library SwapUtils {
             "futureTargetPrice_ must be >= 0"
         );
 
-        uint256 initialTargetPricePrecise = _setTargetPricePrecise(self);
-        uint256 futureTargetPricePrecise = futureTargetPrice_.mul(A_PRECISION);
+        uint256 initialTargetPricePrecise = _getTargetPricePrecise(self);
+        uint256 futureTargetPricePrecise = futureTargetPrice_.mul(1);
 
         if (futureTargetPricePrecise < initialTargetPricePrecise) {
             require(
-                futureTargetPricePrecise.mul(MAX_A_CHANGE) >= initialTargetPricePrecise,
+                futureTargetPricePrecise.mul(10**16).div(10**18) >= initialTargetPricePrecise,
                 "futureTargetPrice_ is too small"
             );
         } else {
             require(
-                futureTargetPricePrecise <= initialTargetPricePrecise.mul(MAX_A_CHANGE),
+                futureTargetPricePrecise <= initialTargetPricePrecise.mul(10**16).div(10**18),
                 "futureTargetPrice_ is too large"
             );
         }
@@ -1556,7 +1563,10 @@ library SwapUtils {
         self.initialTargetPriceTime = block.timestamp;
         self.futureTargetPriceTime = futureTime_;
 
-        emit RampA(
+        // change token multiplier to reflect new target price
+        self.tokenPrecisionMultipliers[0] = self.originalPrecisionMultipliers[0].mul(initialTargetPricePrecise).div(10**18);
+
+        emit RampTargetPrice(
             initialTargetPricePrecise,
             futureTargetPricePrecise,
             block.timestamp,
@@ -1679,14 +1689,17 @@ library SwapUtils {
      */
     function stopRampTargetPrice(Swap storage self) external {
         require(self.futureTargetPriceTime > block.timestamp, "Ramp is already stopped");
-        uint256 currentTargetPrice = _setTargetPricePrecise(self);
+        uint256 currentTargetPrice = _getTargetPricePrecise(self);
 
         self.initialTargetPrice = currentTargetPrice;
         self.futureTargetPrice = currentTargetPrice;
         self.initialTargetPriceTime = block.timestamp;
         self.futureTargetPriceTime = block.timestamp;
 
-        emit StopRampA(currentTargetPrice, block.timestamp);
+        // change token multiplier to reflect new target price
+        self.tokenPrecisionMultipliers[0] = self.originalPrecisionMultipliers[0].mul(currentTargetPrice).div(10**18);
+
+        emit StopRampTargetPrice(currentTargetPrice, block.timestamp);
     }
 
     /**
