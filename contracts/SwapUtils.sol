@@ -82,10 +82,10 @@ library SwapUtils {
     struct Swap {
         // Target price
         // uint256 lastTargetPrice;
-        uint256 initialTargetPrice;
-        uint256 futureTargetPrice;
-        uint256 initialTargetPriceTime;
-        uint256 futureTargetPriceTime;
+        // uint256 initialTargetPrice;
+        // uint256 futureTargetPrice;
+        // uint256 initialTargetPriceTime;
+        // uint256 futureTargetPriceTime;
         // variables around the ramp management of A,
         // the amplification coefficient * n * (n - 1)
         // see https://www.curve.fi/stableswap-paper.pdf for details
@@ -109,12 +109,27 @@ library SwapUtils {
         // for example, TBTC has 18 decimals, so the multiplier should be 1. WBTC
         // has 8, so the multiplier should be 10**18 / 10 ** 8 => 10 ** 10
         uint256[] tokenPrecisionMultipliers;
-        uint256[2] originalPrecisionMultipliers;
+        // uint256[2] originalPrecisionMultipliers;
         // the pool balance of each token, in the token's precision
         // the contract's actual token balance might differ
         uint256[] balances;
         mapping(address => uint256) depositTimestamp;
         mapping(address => uint256) withdrawFeeMultiplier;
+    }
+
+    // Struct storing variables used in calculations in the
+    // rampTargetPrice, stopTargetPrice function to avoid stack too deep errors
+    struct TargetPrice {
+        uint256 initialTargetPrice;
+        uint256 futureTargetPrice;
+        uint256 initialTargetPriceTime;
+        uint256 futureTargetPriceTime;
+
+        // multipliers for each pooled token's precision to get to POOL_PRECISION_DECIMALS
+        // for example, TBTC has 18 decimals, so the multiplier should be 1. WBTC
+        // has 8, so the multiplier should be 10**18 / 10 ** 8 => 10 ** 10
+        // uint256[] tokenPrecisionMultipliers;
+        uint256[2] originalPrecisionMultipliers;
     }
 
     // Struct storing variables used in calculations in the
@@ -249,7 +264,7 @@ library SwapUtils {
      * @param self Swap struct to read from
      * @return Target Price parameter in its raw precision form
      */
-    function _getTargetPricePrecise(Swap storage self) internal view returns (uint256) {
+    function _getTargetPricePrecise(TargetPrice storage self) internal view returns (uint256) {
         uint256 t1 = self.futureTargetPriceTime; // time when ramp is finished
         uint256 a1 = self.futureTargetPrice; // final Target Price value when ramp is finished
         uint256 newTargetPrice;
@@ -1526,12 +1541,13 @@ library SwapUtils {
      * @param futureTime_ timestamp when the new target price should be reached
      */
     function rampTargetPrice(
-        Swap storage self,
+        TargetPrice storage self,
+        // Swap storage swap,
         uint256 futureTargetPrice_,
         uint256 futureTime_
-    ) external {
+    ) external returns (uint256) {
         require(
-            block.timestamp >= self.initialATime.add(1 days),
+            block.timestamp >= self.initialTargetPriceTime.add(1 days),
             "Wait 1 day before starting ramp"
         );
         require(
@@ -1563,15 +1579,15 @@ library SwapUtils {
         self.initialTargetPriceTime = block.timestamp;
         self.futureTargetPriceTime = futureTime_;
 
-        // change token multiplier to reflect new target price
-        self.tokenPrecisionMultipliers[0] = self.originalPrecisionMultipliers[0].mul(initialTargetPricePrecise).div(10**18);
-
         emit RampTargetPrice(
             initialTargetPricePrecise,
             futureTargetPricePrecise,
             block.timestamp,
             futureTime_
         );
+
+        // change token multiplier to reflect new target price
+        return self.originalPrecisionMultipliers[0].mul(initialTargetPricePrecise).div(10**18);
     }
 
     /**
@@ -1687,7 +1703,7 @@ library SwapUtils {
      * cannot be called for another 24 hours
      * @param self Swap struct to update
      */
-    function stopRampTargetPrice(Swap storage self) external {
+    function stopRampTargetPrice(TargetPrice storage self) external returns (uint256) {
         require(self.futureTargetPriceTime > block.timestamp, "Ramp is already stopped");
         uint256 currentTargetPrice = _getTargetPricePrecise(self);
 
@@ -1696,10 +1712,10 @@ library SwapUtils {
         self.initialTargetPriceTime = block.timestamp;
         self.futureTargetPriceTime = block.timestamp;
 
-        // change token multiplier to reflect new target price
-        self.tokenPrecisionMultipliers[0] = self.originalPrecisionMultipliers[0].mul(currentTargetPrice).div(10**18);
-
         emit StopRampTargetPrice(currentTargetPrice, block.timestamp);
+
+        // change token multiplier to reflect new target price
+        return self.originalPrecisionMultipliers[0].mul(currentTargetPrice).div(10**18);
     }
 
     /**

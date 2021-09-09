@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
@@ -31,10 +32,12 @@ contract Swap is OwnerPausable, ReentrancyGuard {
     using SafeMath for uint256;
     using MathUtils for uint256;
     using SwapUtils for SwapUtils.Swap;
+    using SwapUtils for SwapUtils.TargetPrice;
 
     // Struct storing data responsible for automatic market maker functionalities. In order to
     // access this data, this contract uses SwapUtils library. For more details, see SwapUtils.sol
     SwapUtils.Swap public swapStorage;
+    SwapUtils.TargetPrice public targetPriceStorage;
 
     // Address to allowlist contract that holds information about maximum totaly supply of lp tokens
     // and maximum mintable amount per user address. As this is immutable, this will become a constant
@@ -169,7 +172,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
                 decimals[i] <= SwapUtils.POOL_PRECISION_DECIMALS,
                 "Token decimals exceeds max"
             );
-            swapStorage.originalPrecisionMultipliers[i] =
+            targetPriceStorage.originalPrecisionMultipliers[i] =
                 10 **
                     uint256(SwapUtils.POOL_PRECISION_DECIMALS).sub(
                         uint256(decimals[i])
@@ -179,8 +182,8 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         }
 
         uint256[2] memory customPrecisionMultipliers;
-        customPrecisionMultipliers[0] = swapStorage.originalPrecisionMultipliers[0].mul(_targetPrice).div(10 ** 18);
-        customPrecisionMultipliers[1] = swapStorage.originalPrecisionMultipliers[1];
+        customPrecisionMultipliers[0] = targetPriceStorage.originalPrecisionMultipliers[0].mul(_targetPrice).div(10 ** 18);
+        customPrecisionMultipliers[1] = targetPriceStorage.originalPrecisionMultipliers[1];
 
         // Check _a, _a2 _fee, _adminFee, _withdrawFee, _allowlist parameters
         require(_a >= 0 && _a <= SwapUtils.MAX_A, "_a not within the limits");
@@ -209,10 +212,10 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         swapStorage.tokenPrecisionMultipliers = customPrecisionMultipliers;
         swapStorage.balances = new uint256[](_pooledTokens.length);
         
-        swapStorage.initialTargetPrice = _targetPrice/*.mul(SwapUtils.TARGET_PRICE_PRECISION)*/;
-        swapStorage.futureTargetPrice = _targetPrice/*.mul(SwapUtils.TARGET_PRICE_PRECISION)*/;
-        swapStorage.initialTargetPriceTime = 0;
-        swapStorage.futureTargetPriceTime = 0;
+        targetPriceStorage.initialTargetPrice = _targetPrice/*.mul(SwapUtils.TARGET_PRICE_PRECISION)*/;
+        targetPriceStorage.futureTargetPrice = _targetPrice/*.mul(SwapUtils.TARGET_PRICE_PRECISION)*/;
+        targetPriceStorage.initialTargetPriceTime = 0;
+        targetPriceStorage.futureTargetPriceTime = 0;
 
         swapStorage.initialA = _a.mul(SwapUtils.A_PRECISION);
         swapStorage.futureA = _a.mul(SwapUtils.A_PRECISION);
@@ -628,7 +631,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
      * @param futureTime timestamp when the new target price should be reached
      */
     function rampTargetPrice(uint256 futureTargetPrice, uint256 futureTime) external onlyOwner {
-        swapStorage.rampTargetPrice(futureTargetPrice, futureTime);
+        swapStorage.tokenPrecisionMultipliers[0] = targetPriceStorage.rampTargetPrice(futureTargetPrice, futureTime);
     }
 
 
@@ -658,7 +661,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
      * @notice Stop ramping Target Price immediately. Reverts if ramp Target Price is already stopped.
      */
     function stopRampTargetPrice() external onlyOwner {
-        swapStorage.stopRampTargetPrice();
+        swapStorage.tokenPrecisionMultipliers[0] = targetPriceStorage.stopRampTargetPrice();
     }
 
 
