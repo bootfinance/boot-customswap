@@ -81,3 +81,14 @@ $ slither .
 ```
 
 Slither is configured to run as a GitHub Action and error on any high findings.
+
+## Brownie
+
+It is recommended that you create a virtualenv with direnv or other suitable shell helpers when developing or running the brownie tests and other Python based tools.  Make sure your Python 3.7+ virtualenv is configured and activated before running these commands.
+
+Also, since Brownie uses Ganache, make sure you have npm 14+ installed.
+
+```bash
+$ pip install -r requirements.txt
+$ brownie test
+```
