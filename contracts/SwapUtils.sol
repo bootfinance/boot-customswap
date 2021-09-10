@@ -80,12 +80,6 @@ library SwapUtils {
     event StopRampA2(uint256 currentA2, uint256 time);
 
     struct Swap {
-        // Target price
-        // uint256 lastTargetPrice;
-        // uint256 initialTargetPrice;
-        // uint256 futureTargetPrice;
-        // uint256 initialTargetPriceTime;
-        // uint256 futureTargetPriceTime;
         // variables around the ramp management of A,
         // the amplification coefficient * n * (n - 1)
         // see https://www.curve.fi/stableswap-paper.pdf for details
@@ -124,11 +118,7 @@ library SwapUtils {
         uint256 futureTargetPrice;
         uint256 initialTargetPriceTime;
         uint256 futureTargetPriceTime;
-
-        // multipliers for each pooled token's precision to get to POOL_PRECISION_DECIMALS
-        // for example, TBTC has 18 decimals, so the multiplier should be 1. WBTC
-        // has 8, so the multiplier should be 10**18 / 10 ** 8 => 10 ** 10
-        // uint256[] tokenPrecisionMultipliers;
+        
         uint256[2] originalPrecisionMultipliers;
     }
 
@@ -161,7 +151,7 @@ library SwapUtils {
     }
 
     // in wei
-    // uint256 private constant 10**18 = 10**18;
+    uint256 private constant WEI_UNIT = 10**18;
 
     // the precision all pools tokens will be converted to
     uint8 public constant POOL_PRECISION_DECIMALS = 18;
@@ -187,12 +177,12 @@ library SwapUtils {
     // Constant value used as max loop limit
     uint256 private constant MAX_LOOP_LIMIT = 256;
 
-    // Constant values used in ramping A calculations
-    // uint256 public constant TARGET_PRICE_PRECISION = 1;               // Target price will be provided in wei units. So, this value is set to 1.
+    // Constant values used in ramping A, TargetPrice calculations
+    uint256 public constant TARGET_PRICE_PRECISION = 1;               // Target price will be provided in wei units. So, this value is set to 1.
     uint256 public constant A_PRECISION = 100;
     uint256 public constant MAX_A = 10**6;
     uint256 private constant MAX_A_CHANGE = 2;
-    // uint256 private constant MAX_RELATIVE_PRICE_CHANGE = 10**16;     // in wei
+    uint256 private constant MAX_RELATIVE_PRICE_CHANGE = 10**16;     // in Wei. (0.01 * (10**18))
     uint256 private constant MIN_RAMP_TIME = 14 days;
 
     /*** VIEW & PURE FUNCTIONS ***/
@@ -1536,13 +1526,12 @@ library SwapUtils {
      * @notice Start ramping up or down target price towards given futureTargetPrice_ and futureTime_
      * Checks if the change is too rapid, and commits the new target price value only when it falls under
      * the limit range.
-     * @param self Swap struct to update
+     * @param self TargetPrice struct to update
      * @param futureTargetPrice_ the new target price to ramp towards
      * @param futureTime_ timestamp when the new target price should be reached
      */
     function rampTargetPrice(
         TargetPrice storage self,
-        // Swap storage swap,
         uint256 futureTargetPrice_,
         uint256 futureTime_
     ) external returns (uint256) {
@@ -1560,16 +1549,16 @@ library SwapUtils {
         );
 
         uint256 initialTargetPricePrecise = _getTargetPricePrecise(self);
-        uint256 futureTargetPricePrecise = futureTargetPrice_.mul(1);
+        uint256 futureTargetPricePrecise = futureTargetPrice_.mul(TARGET_PRICE_PRECISION);
 
         if (futureTargetPricePrecise < initialTargetPricePrecise) {
             require(
-                futureTargetPricePrecise.mul(10**16).div(10**18) >= initialTargetPricePrecise,
+                futureTargetPricePrecise.mul(MAX_RELATIVE_PRICE_CHANGE).div(WEI_UNIT) >= initialTargetPricePrecise,
                 "futureTargetPrice_ is too small"
             );
         } else {
             require(
-                futureTargetPricePrecise <= initialTargetPricePrecise.mul(10**16).div(10**18),
+                futureTargetPricePrecise <= initialTargetPricePrecise.mul(MAX_RELATIVE_PRICE_CHANGE).div(WEI_UNIT),
                 "futureTargetPrice_ is too large"
             );
         }
@@ -1587,7 +1576,7 @@ library SwapUtils {
         );
 
         // change token multiplier to reflect new target price
-        return self.originalPrecisionMultipliers[0].mul(initialTargetPricePrecise).div(10**18);
+        return self.originalPrecisionMultipliers[0].mul(initialTargetPricePrecise).div(WEI_UNIT);
     }
 
     /**
@@ -1701,7 +1690,7 @@ library SwapUtils {
     /**
      * @notice Stops ramping Target price immediately. Once this function is called, rampTargetPrce()
      * cannot be called for another 24 hours
-     * @param self Swap struct to update
+     * @param self TargetPrice struct to update
      */
     function stopRampTargetPrice(TargetPrice storage self) external returns (uint256) {
         require(self.futureTargetPriceTime > block.timestamp, "Ramp is already stopped");
@@ -1715,7 +1704,7 @@ library SwapUtils {
         emit StopRampTargetPrice(currentTargetPrice, block.timestamp);
 
         // change token multiplier to reflect new target price
-        return self.originalPrecisionMultipliers[0].mul(currentTargetPrice).div(10**18);
+        return self.originalPrecisionMultipliers[0].mul(currentTargetPrice).div(WEI_UNIT);
     }
 
     /**

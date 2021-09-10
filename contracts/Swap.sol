@@ -34,7 +34,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
     using SwapUtils for SwapUtils.Swap;
     using SwapUtils for SwapUtils.TargetPrice;
 
-    // Struct storing data responsible for automatic market maker functionalities. In order to
+    // Structs storing data responsible for automatic market maker functionalities. In order to
     // access this data, this contract uses SwapUtils library. For more details, see SwapUtils.sol
     SwapUtils.Swap public swapStorage;
     SwapUtils.TargetPrice public targetPriceStorage;
@@ -128,10 +128,10 @@ contract Swap is OwnerPausable, ReentrancyGuard {
      * @param _fee default swap fee to be initialized with
      * @param _adminFee default adminFee to be initialized with
      * @param _withdrawFee default withdrawFee to be initialized with
-
+     * @param _targetPrice default targetPrice to be initialized with
      */
 
-        //   * @param _allowlist address of allowlist contract for guarded launch
+    //   * @param _allowlist address of allowlist contract for guarded launch
     constructor(
         IERC20[] memory _pooledTokens,
         uint8[] memory decimals,
