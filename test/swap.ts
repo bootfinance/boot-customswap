@@ -65,7 +65,7 @@ describe("Swap", async () => {
   // Test Values
   const INITIAL_A_VALUE = 1
   const INITIAL_A2_VALUE = 85
-  const INITIAL_CUSTOM_TARGET_PRICE_VALUE = 4
+  const INITIAL_CUSTOM_TARGET_PRICE_VALUE = BigNumber.from(String(4e18))
   const SWAP_FEE = 1e7
   const LP_TOKEN_NAME = "Test LP Token Name"
   const LP_TOKEN_SYMBOL = "TESTLP"
@@ -127,6 +127,7 @@ describe("Swap", async () => {
         SWAP_FEE,
         0,
         0,
+        INITIAL_CUSTOM_TARGET_PRICE_VALUE
       ],
     )) as Swap
     await swap.deployed()
@@ -155,6 +156,10 @@ describe("Swap", async () => {
       await swapToken.connect(signer).approve(swap.address, MAX_UINT256)
     })
 
+    // console.log("pre approved tokens")
+
+    // show the LP token supply
+    console.log("LP token supply: %s", await swapToken.totalSupply())
     // Initialize the liquidity pool with tokens
     await swap.addLiquidity(
       [String(1e18), String(1e18)],
@@ -163,11 +168,14 @@ describe("Swap", async () => {
       // getTestMerkleProof(ownerAddress),
     )
 
+    // console.log("added liquidity")
+
+
     expect(await firstToken.balanceOf(swap.address)).to.eq(String(1e18))
     expect(await secondToken.balanceOf(swap.address)).to.eq(String(1e18))
   })
 
-  describe("swapStorage", () => {
+  describe.only("swapStorage", () => {
     describe("lpToken", async () => {
       it("Returns correct lpTokenName", async () => {
         expect(await swapToken.name()).to.eq(LP_TOKEN_NAME)
