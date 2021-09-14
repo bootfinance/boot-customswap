@@ -8,3 +8,4 @@ coverage*
 todo
 .direnv/
 .envrc
+__pycache__

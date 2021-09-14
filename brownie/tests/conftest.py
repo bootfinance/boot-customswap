@@ -4,32 +4,16 @@ import pytest
 import json
 from brownie import chain
 
-# wBTC = "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
-# sBTC = "0xfe18be6b3bd88a2d2a7f928d00292e7a9963cfc6"
-# renBTC = "0xeb4c2781e4eba804ce9a9803c67d0893436bb27d"
-# LPBTC = "0x28a8746e75304c0780E011BEd21C72cD78cd535E"
 A_BTC = 0
 _init_fee_BTC = 0
 _admin_fee_BTC = 0
 
-# USDT = "0xdac17f958d2ee523a2206206994597c13d831ec7"
-# USDC = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
-# TUSD = "0x0000000000085d4780B73119b644AE5ecd22b376"
-# DAI = "0x6b175474e89094c44da98b954eedeac495271d0f"
-# LPUSD = "0x28a8746e75304c0780E011BEd21C72cD78cd535E"
 A_USD = 0
 _init_fee_USD = 0
 
-# WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-# WETH1 = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-# LPETH = "0x28a8746e75304c0780E011BEd21C72cD78cd535E"
 A_ETH = 100
 _init_fee_ETH = 4000000
 _admin_fee_ETH = 5000000000
-
-VOTING_ESCROW_NAME = "Voting Escrow Name"
-VOTING_ESCROW_SYMBOL = "Voting Escrow Symbol"
-VOTING_ESCROW_VERSION = "Voting Escrow V1"
 
 USD_LP_TOKEN_NAME = "USD LP Token Name"
 USD_LP_TOKEN_SYMBOL = "USD LP Token Symbol"
@@ -100,23 +84,6 @@ def account2(accounts):
 @pytest.fixture(scope="module")
 def boot(MainToken, admin):
     return MainToken.deploy("BOOT Finance Token", "BOOT", 18, {'from': admin})
-
-@pytest.fixture(scope="module")
-def voting_escrow(boot, admin, VotingEscrow):
-    return VotingEscrow.deploy(boot.address, VOTING_ESCROW_NAME, VOTING_ESCROW_SYMBOL, VOTING_ESCROW_VERSION, {'from': admin})
-
-@pytest.fixture(scope="module")
-def gauge_controller(boot, voting_escrow, admin, GaugeController):
-    r = GaugeController.deploy(boot.address, voting_escrow.address, {'from': admin})
-    r.add_type("Pool Gauge1")
-    r.add_type("Pool Gauge2")
-    return r
-
-@pytest.fixture(scope="module")
-def minter(boot, gauge_controller, admin, Minter):
-    m = Minter.deploy(boot.address, gauge_controller.address, {'from': admin})
-    boot.set_minter(m)
-    return m
 
 @pytest.fixture(scope="module")
 def faucet(boot, minter, accounts):
