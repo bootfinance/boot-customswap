@@ -279,7 +279,7 @@ library SwapUtils {
             newTargetPrice = a1;
         }
         
-        console.log("running _getTargetPricePrecise() targetPrice of %s", newTargetPrice);
+        // console.log("running _getTargetPricePrecise() targetPrice of %s", newTargetPrice);
 
         return newTargetPrice;
     }
@@ -1176,16 +1176,15 @@ library SwapUtils {
         AddLiquidityInfo memory v = AddLiquidityInfo(0, 0, 0, 0);
 
         if (self.lpToken.totalSupply() != 0) {
-            console.log("getD(), %s", getD(self));
             v.d0 = getD(self);
         }
 
-        console.log("lptoken total supply in L-1183 addLiquidity: %s", self.lpToken.totalSupply());
+        // console.log("lptoken total supply in L-1183 addLiquidity: %s", self.lpToken.totalSupply());
 
-        console.log(
-            "d0: %s,",
-            v.d0
-        );
+        // console.log(
+        //     "d0: %s,",
+        //     v.d0
+        // );
         uint256[] memory newBalances = self.balances;
 
         for (uint256 i = 0; i < self.pooledTokens.length; i++) {
@@ -1215,10 +1214,10 @@ library SwapUtils {
 
         // invariant after change
         v.preciseA = determineA(self, _xp(self, newBalances));
-        uint256[] memory tempxp = _xp(self, newBalances);
-        console.log("temp xp[0] in addLiquidity(): %s", tempxp[0]);
-        console.log("temp xp[1] in addLiquidity(): %s", tempxp[1]);
-        console.log("v.preciseA in addLiquidity(): %s", v.preciseA);
+        // uint256[] memory tempxp = _xp(self, newBalances);
+        // console.log("temp xp[0] in addLiquidity(): %s", tempxp[0]);
+        // console.log("temp xp[1] in addLiquidity(): %s", tempxp[1]);
+        // console.log("v.preciseA in addLiquidity(): %s", v.preciseA);
         // calculate D based on correct A
         v.d1 = getD(_xp(self, newBalances), v.preciseA);
         require(v.d1 > v.d0, "D should increase");
@@ -1227,7 +1226,7 @@ library SwapUtils {
         v.d2 = v.d1;
         if (self.lpToken.totalSupply() != 0) {
             uint256 feePerToken = _feePerToken(self);
-            console.log("lptoken total supply L-1226 in addLiquidity(): %s", self.lpToken.totalSupply());
+            // console.log("lptoken total supply L-1226 in addLiquidity(): %s", self.lpToken.totalSupply());
             for (uint256 i = 0; i < self.pooledTokens.length; i++) {
                 uint256 idealBalance = v.d1.mul(self.balances[i]).div(v.d0);
                 fees[i] = feePerToken
@@ -1584,8 +1583,8 @@ library SwapUtils {
         self.initialTargetPriceTime = block.timestamp;
         self.futureTargetPriceTime = futureTime_;
         
-        console.log("executing rampTargetPrice() initalTargetPrice: %s", self.initialTargetPrice);
-        console.log("futureTargetPrice: %s", self.futureTargetPrice);
+        // console.log("executing rampTargetPrice() initalTargetPrice: %s", self.initialTargetPrice);
+        // console.log("futureTargetPrice: %s", self.futureTargetPrice);
 
         emit RampTargetPrice(
             initialTargetPricePrecise,

@@ -159,7 +159,7 @@ describe("Swap", async () => {
     // console.log("pre approved tokens")
 
     // show the LP token supply
-    console.log("LP token supply: %s", await swapToken.totalSupply())
+    // console.log("LP token supply: %s", await swapToken.totalSupply())
     // Initialize the liquidity pool with tokens
     await swap.addLiquidity(
       [String(1e18), String(1e18)],
@@ -175,7 +175,7 @@ describe("Swap", async () => {
     expect(await secondToken.balanceOf(swap.address)).to.eq(String(1e18))
   })
 
-  describe.only("swapStorage", () => {
+  describe("swapStorage", () => {
     describe("lpToken", async () => {
       it("Returns correct lpTokenName", async () => {
         expect(await swapToken.name()).to.eq(LP_TOKEN_NAME)
@@ -328,7 +328,7 @@ describe("Swap", async () => {
       const actualPoolTokenAmount = await swapToken.balanceOf(user1Address)
 
       // The actual pool token amount is less than 4e18 due to the imbalance of the underlying tokens
-      expect(actualPoolTokenAmount).to.eq(BigNumber.from("3991672211258372957"))
+      expect(actualPoolTokenAmount).to.eq(BigNumber.from("7005881749778048873"))
     })
 
     it("Succeeds with actual pool token amount being within ±0.1% range of calculated pool token", async () => {

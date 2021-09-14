@@ -184,7 +184,7 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         uint256[2] memory customPrecisionMultipliers;
         customPrecisionMultipliers[0] = targetPriceStorage.originalPrecisionMultipliers[0].mul(_targetPrice).div(10 ** 18);
         customPrecisionMultipliers[1] = targetPriceStorage.originalPrecisionMultipliers[1];
-        console.log("customPrecisionMultipliers[0] %s", customPrecisionMultipliers[0]);
+        // console.log("customPrecisionMultipliers[0] %s", customPrecisionMultipliers[0]);
 
         // Check _a, _a2 _fee, _adminFee, _withdrawFee, _allowlist parameters
         require(_a >= 0 && _a <= SwapUtils.MAX_A, "_a not within the limits");
