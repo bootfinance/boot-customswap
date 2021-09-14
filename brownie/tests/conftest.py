@@ -4,11 +4,6 @@ import pytest
 import json
 from brownie import chain
 
-data = json.load(open('config/pooldata.json', 'r'))
-lp_token_address = data.get('lp_token_address')
-swap_constructor = data.get('swap_constructor')
-coins = data.get('coins')
-
 # wBTC = "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
 # sBTC = "0xfe18be6b3bd88a2d2a7f928d00292e7a9963cfc6"
 # renBTC = "0xeb4c2781e4eba804ce9a9803c67d0893436bb27d"
@@ -28,9 +23,9 @@ _init_fee_USD = 0
 # WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
 # WETH1 = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
 # LPETH = "0x28a8746e75304c0780E011BEd21C72cD78cd535E"
-A_ETH = swap_constructor.get('_A')
-_init_fee_ETH = swap_constructor.get('_fee')
-_admin_fee_ETH = swap_constructor.get('_admin_fee')
+A_ETH = 100
+_init_fee_ETH = 4000000
+_admin_fee_ETH = 5000000000
 
 VOTING_ESCROW_NAME = "Voting Escrow Name"
 VOTING_ESCROW_SYMBOL = "Voting Escrow Symbol"
@@ -247,8 +242,3 @@ def usdSwapPoolGauge(minter, admin, usdSwap, gauge_controller, USDPoolGauge):
     r = USDPoolGauge.deploy(usdSwap.swapStorage()['lpToken'], minter, {'from': admin})
     gauge_controller.add_gauge(r.address, 0, 1)
     return r
-
-# legacy
-@pytest.fixture(scope="module")
-def ethPoolD(ETHPoolDelegator, admin):
-    return ETHPoolDelegator.deploy(admin, coins, lp_token_address, A_ETH, _init_fee_ETH, _admin_fee_ETH, {'from': admin})
