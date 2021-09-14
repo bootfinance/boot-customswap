@@ -81,22 +81,6 @@ def account1(accounts):
 def account2(accounts):
     return accounts[9]
 
-@pytest.fixture(scope="module")
-def boot(MainToken, admin):
-    return MainToken.deploy("BOOT Finance Token", "BOOT", 18, {'from': admin})
-
-@pytest.fixture(scope="module")
-def faucet(boot, minter, accounts):
-    chain.sleep(52*7*24*60*60)      # to increase available_supply
-    boot.update_mining_parameters() # here
-    qty = boot.available_supply()
-    assert qty != 0
-    n = 10 * 10**18
-    assert boot.mint(accounts[0], 0, n, {'from': minter})
-    balance = boot.balanceOf(accounts[0])
-    assert balance == n
-    return accounts[0]
-
 # A number of ERC20 tests in tests/token expect accounts[0] to be the faucet
 # and assume the token fixture is the main BOOT token.
 #
