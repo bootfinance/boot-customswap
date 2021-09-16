@@ -5,24 +5,35 @@ import pytest
 from brownie.test import given, strategy
 from hypothesis import settings
 from models import Curve
+from conftest import MIN_RAMP_TIME
 
 
 @given(
     st_pct=strategy("decimal[50]", min_value="0.001", max_value=1, unique=True, places=3),
     st_seed_amount=strategy("decimal", min_value=5, max_value=12, places=1),
+    st_A=strategy("uint", min_value=0, max_value=2)
 )
 @settings(max_examples=5)
 def test_curve_in_contract(
     chain,
+    admin,
     alice,
-    swap,
+    swap_1,
+    swap_10,
+    swap_100,
+    swap_1000,
+    swap_utils,
     coins,
     decimals,
     n_coins,
     approx,
     st_seed_amount,
     st_pct,
+    st_A
 ):
+    swap = [swap_1, swap_10, swap_100, swap_1000][st_A]
+    A = [1, 10, 100, 1000][st_A]
+
     st_seed_amount = int(10 ** st_seed_amount)
 
     # add initial pool liquidity
@@ -44,7 +55,8 @@ def test_curve_in_contract(
         rate = 10 ** 18
         precision = 10 ** (18 - _decimals)
         rates.append(rate * precision)
-    curve_model = Curve(1, balances, n_coins, rates)
+
+    curve_model = Curve(A, balances, n_coins, rates)
 
     # execute a series of swaps and compare the python model to the contract results
     exchange_pairs = deque(permutations(range(n_coins), 2))

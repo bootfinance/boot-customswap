@@ -1,13 +1,6 @@
 #!/usr/bin/python3
 
 import pytest
-import json
-from brownie import chain
-import warnings
-from pathlib import Path
-
-from brownie._config import CONFIG
-from brownie.project.main import get_loaded_projects
 
 pytest_plugins = [
     "fixtures.accounts",
@@ -55,6 +48,7 @@ def isolation_setup(fn_isolation):
 
 SWAP_FEE = 1e7
 MAX_UINT256 = 2**256 - 1
+MIN_RAMP_TIME = 14 * 24 * 60 * 60
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -74,8 +68,61 @@ def swap(Swap, swap_utils, coins, decimals, admin):
         decimals,
         'USD Liquidity',
         'USDLP',
-        1, # a
-        1, # a2
+        1,      # a
+        1,      # a2
+        0,      # swap fee
+        0,      # admin fee
+        0,      # withdraw fee
+        10**18, # Initial Target Price
+        {'from': admin})
+
+
+@pytest.fixture(scope="module")
+def swap_1(swap):
+    return swap
+
+
+@pytest.fixture(scope="module")
+def swap_10(Swap, swap_utils, coins, decimals, admin):
+    return Swap.deploy(
+        coins, #[coin.address for coin in coins],
+        decimals,
+        'USD Liquidity',
+        'USDLP',
+        10,     # a
+        10,     # a2
+        0,      # swap fee
+        0,      # admin fee
+        0,      # withdraw fee
+        10**18, # Initial Target Price
+        {'from': admin})
+
+
+@pytest.fixture(scope="module")
+def swap_100(Swap, swap_utils, coins, decimals, admin):
+    return Swap.deploy(
+        coins, #[coin.address for coin in coins],
+        decimals,
+        'USD Liquidity',
+        'USDLP',
+        100,    # a
+        100,    # a2
+        0,      # swap fee
+        0,      # admin fee
+        0,      # withdraw fee
+        10**18, # Initial Target Price
+        {'from': admin})
+
+
+@pytest.fixture(scope="module")
+def swap_1000(Swap, swap_utils, coins, decimals, admin):
+    return Swap.deploy(
+        coins, #[coin.address for coin in coins],
+        decimals,
+        'USD Liquidity',
+        'USDLP',
+        1000,   # a
+        1000,   # a2
         0,      # swap fee
         0,      # admin fee
         0,      # withdraw fee
