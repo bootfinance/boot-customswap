@@ -2,6 +2,18 @@
 
 import pytest
 
+
+MAX_UINT256 = 2**256 - 1
+
+# From SwapUtils impl:
+# TBD: Should there be a way to get these from the contract?
+#
+A_PRECISION = 100
+MAX_A = 10**6
+MAX_A_CHANGE = 2
+MIN_RAMP_TIME = 14 * 24 * 60 * 60
+
+
 pytest_plugins = [
     "fixtures.accounts",
     "fixtures.coins",
@@ -44,11 +56,6 @@ def pytest_sessionfinish(session, exitstatus):
 @pytest.fixture(autouse=True)
 def isolation_setup(fn_isolation):
     pass
-
-
-SWAP_FEE = 1e7
-MAX_UINT256 = 2**256 - 1
-MIN_RAMP_TIME = 14 * 24 * 60 * 60
 
 
 @pytest.fixture(scope="module", autouse=True)
