@@ -1250,6 +1250,8 @@ library SwapUtils {
         } else {
             toMint = v.d2.sub(v.d0).mul(self.lpToken.totalSupply()).div(v.d0);
         }
+        // console.log("toMint: %s", toMint);
+        // console.log("minToMint: %s", minToMint);
 
         require(toMint >= minToMint, "Couldn't mint min requested");
 

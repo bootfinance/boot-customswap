@@ -175,6 +175,98 @@ describe("Swap", async () => {
     expect(await secondToken.balanceOf(swap.address)).to.eq(String(1e18))
   })
 
+  describe("addLiquidity & removeLiquidity", () => {
+    describe("Case-1: token A only", async () => {
+      it("user should get back liquidated tokens", async () => {
+        // check the balance of user1 before adding liquidity
+        expect(await firstToken.balanceOf(user1Address)).to.eq(String(1e20))
+        expect(await secondToken.balanceOf(user1Address)).to.eq(String(1e20))
+
+        // user1 add liquidity
+        await swap
+          .connect(user1)
+          .addLiquidity([String(2e18), 0], 0, MAX_UINT256/*, []*/)
+
+        // calculate the LP tokens user1 receive AL: Adding liquidity
+        const currentUser1BalanceAfterAL = await swapToken.balanceOf(user1Address)
+        expect(currentUser1BalanceAfterAL).to.eq(BigNumber.from("7831772991265189512"))
+
+        // remove liquidity by burning the received LP tokens
+        await swap
+          .connect(user1)
+          .removeLiquidity(currentUser1BalanceAfterAL, [0, 0], MAX_UINT256)
+
+        // calculate the LP tokens user1 receive RL: Removing liquidity
+        const currentUser1BalanceAfterRL = await swapToken.balanceOf(user1Address)
+        expect(currentUser1BalanceAfterRL).to.eq(BigNumber.from(0))
+
+        // check the balance of user1 after removing liquidity
+        expect(await firstToken.balanceOf(user1Address)).to.eq(String("99833340461631872188"))
+        expect(await secondToken.balanceOf(user1Address)).to.eq(String(1e20))
+      })
+    })
+
+    describe("Case-2: token B only", async () => {
+      it("user should get back liquidated tokens", async () => {
+        // check the balance of user1 before adding liquidity
+        expect(await firstToken.balanceOf(user1Address)).to.eq(String(1e20))
+        expect(await secondToken.balanceOf(user1Address)).to.eq(String(1e20))
+
+        // user1 add liquidity
+        await swap
+          .connect(user1)
+          .addLiquidity([0, String(2e18)], 0, MAX_UINT256/*, []*/)
+
+        // calculate the LP tokens user1 receive AL: Adding liquidity
+        const currentUser1BalanceAfterAL = await swapToken.balanceOf(user1Address)
+        expect(currentUser1BalanceAfterAL).to.eq(BigNumber.from("2013739974896598164"))
+
+        // remove liquidity by burning the received LP tokens
+        await swap
+          .connect(user1)
+          .removeLiquidity(currentUser1BalanceAfterAL, [0, 0], MAX_UINT256)
+
+        // calculate the LP tokens user1 receive RL: Removing liquidity
+        const currentUser1BalanceAfterRL = await swapToken.balanceOf(user1Address)
+        expect(currentUser1BalanceAfterRL).to.eq(BigNumber.from(0))
+
+        // check the balance of user1 after removing liquidity
+        expect(await firstToken.balanceOf(user1Address)).to.eq(String("100287778038948932498"))
+        expect(await secondToken.balanceOf(user1Address)).to.eq(String("98863334116846797495"))
+      })
+    })
+
+    describe("Case-3: token A & B", async () => {
+      it("user should get back liquidated tokens", async () => {
+        // check the balance of user1 before adding liquidity
+        expect(await firstToken.balanceOf(user1Address)).to.eq(String(1e20))
+        expect(await secondToken.balanceOf(user1Address)).to.eq(String(1e20))
+
+        // user1 add liquidity
+        await swap
+          .connect(user1)
+          .addLiquidity([String(2e18), String(2e18)], 0, MAX_UINT256/*, []*/)
+
+        // calculate the LP tokens user1 receive AL: Adding liquidity
+        const currentUser1BalanceAfterAL = await swapToken.balanceOf(user1Address)
+        expect(currentUser1BalanceAfterAL).to.eq(BigNumber.from("9967611421678310148"))
+
+        // remove liquidity by burning the received LP tokens
+        await swap
+          .connect(user1)
+          .removeLiquidity(currentUser1BalanceAfterAL, [0, 0], MAX_UINT256)
+
+        // calculate the LP tokens user1 receive RL: Removing liquidity
+        const currentUser1BalanceAfterRL = await swapToken.balanceOf(user1Address)
+        expect(currentUser1BalanceAfterRL).to.eq(BigNumber.from(0))
+
+        // check the balance of user1 after removing liquidity
+        expect(await firstToken.balanceOf(user1Address)).to.eq(String(1e20))
+        expect(await secondToken.balanceOf(user1Address)).to.eq(String(1e20))
+      })
+    })
+  })
+
   describe("swapStorage", () => {
     describe("lpToken", async () => {
       it("Returns correct lpTokenName", async () => {
@@ -278,7 +370,7 @@ describe("Swap", async () => {
     })
   })
 
-  describe("addLiquidity", () => {
+  describe.only("addLiquidity", () => {
     it("Reverts with 'Amounts must match pooled tokens'", async () => {
       await expect(
         swap.connect(user1).addLiquidity([String(1e16)], 0, MAX_UINT256/*, []*/),
@@ -297,15 +389,16 @@ describe("Swap", async () => {
       ).to.be.revertedWith("Cannot withdraw more than available")
     })
 
-    it("Reverts with 'Must supply all tokens in pool'", async () => {
-      swapToken.approve(swap.address, String(2e18))
-      await swap.removeLiquidity(String(2e18), [0, 0], MAX_UINT256)
-      await expect(
-        swap
-          .connect(user1)
-          .addLiquidity([0, String(3e18)], MAX_UINT256, MAX_UINT256/*, []*/),
-      ).to.be.revertedWith("Must supply all tokens in pool")
-    })
+    // TODO: We need to provide liquidity with single token. So, this test is not applicable.
+    // it("Reverts with 'Must supply all tokens in pool'", async () => {
+    //   swapToken.approve(swap.address, String(2e18))
+    //   await swap.removeLiquidity(String(2e18), [0, 0], MAX_UINT256)
+    //   await expect(
+    //     swap
+    //       .connect(user1)
+    //       .addLiquidity([0, String(3e18)], 0, MAX_UINT256/*, []*/),
+    //   ).to.be.revertedWith("Must supply all tokens in pool")
+    // })
 
     it("Succeeds with expected output amount of pool tokens", async () => {
       const calculatedPoolTokenAmount = await swap
