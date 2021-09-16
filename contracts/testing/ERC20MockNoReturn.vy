@@ -1,4 +1,4 @@
-# @version ^0.2.0
+# @version ^0.2.16
 """
 @notice Mock non-standard ERC20 for testing
 @dev transfer and approve functions return None rather than True

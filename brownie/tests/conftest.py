@@ -30,6 +30,14 @@ WRAPPED_COIN_METHODS = {
 }
 
 
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers",
+        "itercoins: parametrize a test with one or more ranges, equal to the length "
+        "of `wrapped_coins` for the active pool",
+    )
+
+
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session, exitstatus):
     if exitstatus == pytest.ExitCode.NO_TESTS_COLLECTED:
@@ -49,18 +57,26 @@ SWAP_FEE = 1e7
 MAX_UINT256 = 2**256 - 1
 
 
+@pytest.fixture(scope="module", autouse=True)
+def math_utils(MathUtils, admin):
+    return MathUtils.deploy({'from':admin})
+
+
+@pytest.fixture(scope="module", autouse=True)
+def swap_utils(SwapUtils, math_utils, admin):
+    return SwapUtils.deploy({'from':admin})
+
+
 @pytest.fixture(scope="module")
-def swap(Swap, MathUtils, SwapUtils, coins, decimals, admin):
-    MathUtils.deploy({'from': admin})
-    SwapUtils.deploy({'from': admin})
+def swap(Swap, swap_utils, coins, decimals, admin):
     return Swap.deploy(
         coins, #[coin.address for coin in coins],
         decimals,
         'USD Liquidity',
         'USDLP',
-        85,     # a
-        85,     # a2
-        SWAP_FEE,
+        1, # a
+        1, # a2
+        0,      # swap fee
         0,      # admin fee
         0,      # withdraw fee
         10**18, # Initial Target Price

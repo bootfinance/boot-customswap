@@ -1,6 +1,5 @@
 import brownie
 import pytest
-from brownie import chain
 from brownie.test import given, strategy
 
 pytestmark = pytest.mark.usefixtures("mint_alice", "approve_alice")
@@ -8,7 +7,7 @@ pytestmark = pytest.mark.usefixtures("mint_alice", "approve_alice")
 
 @pytest.mark.parametrize("min_amount", [0, 2 * 10 ** 18])
 def test_initial(
-    alice, swap, coins, pool_token, min_amount, decimals, n_coins, initial_amounts
+    chain, alice, swap, coins, pool_token, min_amount, decimals, n_coins, initial_amounts
 ):
     amounts = [10 ** i for i in decimals]
 
@@ -23,7 +22,7 @@ def test_initial(
 
 
 @given(idx=strategy('uint', min_value=0, max_value=1))
-def test_initial_liquidity_missing_coin(alice, swap, pool_token, idx, decimals):
+def test_initial_liquidity_missing_coin(chain, alice, swap, pool_token, idx, decimals):
     amounts = [10 ** i for i in decimals]
     amounts[idx] = 0
 
