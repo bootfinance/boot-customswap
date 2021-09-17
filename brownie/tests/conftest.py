@@ -12,6 +12,7 @@ A_PRECISION = 100
 MAX_A = 10**6
 MAX_A_CHANGE = 2
 MIN_RAMP_TIME = 14 * 24 * 60 * 60
+ONE_DAY = 24 * 60 * 60
 
 
 pytest_plugins = [
@@ -130,6 +131,38 @@ def swap_1000(Swap, swap_utils, coins, decimals, admin):
         'USDLP',
         1000,   # a
         1000,   # a2
+        0,      # swap fee
+        0,      # admin fee
+        0,      # withdraw fee
+        10**18, # Initial Target Price
+        {'from': admin})
+
+
+@pytest.fixture(scope="module")
+def swap_10_100(Swap, swap_utils, coins, decimals, admin):
+    return Swap.deploy(
+        coins, #[coin.address for coin in coins],
+        decimals,
+        'USD Liquidity',
+        'USDLP',
+        10,     # a
+        100,    # a2
+        0,      # swap fee
+        0,      # admin fee
+        0,      # withdraw fee
+        10**18, # Initial Target Price
+        {'from': admin})
+
+
+@pytest.fixture(scope="module")
+def swap_100_10(Swap, swap_utils, coins, decimals, admin):
+    return Swap.deploy(
+        coins, #[coin.address for coin in coins],
+        decimals,
+        'USD Liquidity',
+        'USDLP',
+        100,    # a
+        10,     # a2
         0,      # swap fee
         0,      # admin fee
         0,      # withdraw fee

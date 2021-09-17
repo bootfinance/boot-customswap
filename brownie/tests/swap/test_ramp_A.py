@@ -1,9 +1,7 @@
 import brownie
 import pytest
-from conftest import MAX_A_CHANGE, MIN_RAMP_TIME, A_PRECISION
+from conftest import MAX_A_CHANGE, MIN_RAMP_TIME, ONE_DAY, A_PRECISION
 from brownie.test import given, strategy
-
-ONE_DAY = 24 * 60 * 60
 
 
 @given(st_A=strategy("uint", min_value=0, max_value=2))
