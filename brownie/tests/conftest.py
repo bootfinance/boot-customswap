@@ -44,6 +44,35 @@ def pytest_configure(config):
     )
 
 
+def pytest_generate_tests(metafunc):
+    # apply initial parametrization of `itercoins`
+    for marker in metafunc.definition.iter_markers(name="itercoins"):
+        for item in marker.args:
+            metafunc.parametrize(item, range(2)) # since there are 2 coins in the customswap
+
+
+def pytest_collection_modifyitems(config, items):
+    for item in items.copy():
+        try:
+            params = item.callspec.params
+        except Exception:
+            continue
+
+        # remove excess `itercoins` parametrized tests
+        for marker in item.iter_markers(name="itercoins"):
+            n_coins = 2
+            values = [params[i] for i in marker.args]
+            if max(values) >= n_coins or len(set(values)) < len(values):
+                items.remove(item)
+                break
+
+        if item not in items:
+            continue
+
+    # hacky magic to ensure the correct number of tests is shown in collection report
+    config.pluginmanager.get_plugin("terminalreporter")._numcollected = len(items)
+
+
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session, exitstatus):
     if exitstatus == pytest.ExitCode.NO_TESTS_COLLECTED:
