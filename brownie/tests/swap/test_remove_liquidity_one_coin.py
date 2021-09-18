@@ -16,15 +16,6 @@ def test_amount_received(chain, alice, initial_amounts, swap, coins, decimals, p
     assert 10 ** decimals[idx] // rate_mod <= balance <= initial_amounts[idx]
 
 
-# TBD: Is this the expected behavior?
-def test_cannot_remove_all_liquidity_in_one_coin(alice, swap, pool_token, n_coins, base_amount):
-    amount = pool_token.balanceOf(alice)
-    assert amount == pool_token.totalSupply()
-    pool_token.approve(swap, amount, {"from": alice})
-    with brownie.reverts():
-        swap.removeLiquidityOneToken(amount, 0, 0, chain.time() + 60, {"from": alice})
-
-
 @pytest.mark.itercoins("idx")
 @pytest.mark.parametrize("divisor", [42, 5, 2])
 def test_lp_token_balance(alice, swap, pool_token, initial_amounts, n_coins, base_amount, idx, divisor):
@@ -71,3 +62,19 @@ def test_event(alice, bob, swap, pool_token, idx, coins):
 
     coin = coins[idx]
     assert coin.balanceOf(bob) == event["tokensBought"]
+
+
+def test_cannot_remove_all_sparse_liquidity_in_one_coin(alice, swap, pool_token):
+    amount = pool_token.balanceOf(alice)
+    assert amount == pool_token.totalSupply()
+    pool_token.approve(swap, amount, {"from": alice})
+    with brownie.reverts():
+        swap.removeLiquidityOneToken(amount, 0, 0, chain.time() + 60, {"from": alice})
+
+
+def test_can_remove_all_liquidity_share_in_one_coin(alice, bob, mint_bob, approve_bob, swap, pool_token, initial_amounts):
+    swap.addLiquidity(initial_amounts, 0, chain.time() + 60, {"from": bob})
+    amount = pool_token.balanceOf(bob)
+    assert amount < pool_token.totalSupply()
+    pool_token.approve(swap, amount, {"from": bob})
+    swap.removeLiquidityOneToken(amount, 0, 0, chain.time() + 60, {"from": bob})

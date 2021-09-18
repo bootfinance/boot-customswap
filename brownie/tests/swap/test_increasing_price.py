@@ -69,7 +69,6 @@ class StateMachine:
         """
         idx = self._min_max()[1]
         amount = int(10 ** self.decimals[idx] * st_pct)
-        print(amount, self.pool_token.balanceOf(self.alice))
         self.swap.removeLiquidityOneToken(amount, idx, 0, chain.time() + 60, {"from": self.alice})
 
     def rule_remove_imbalance(self, st_pct):
@@ -79,7 +78,6 @@ class StateMachine:
         idx = self._min_max()[1]
         amounts = [0] * self.n_coins
         amounts[idx] = int(10 ** self.decimals[idx] * st_pct)
-        print(amounts, self.pool_token.balanceOf(self.alice))
         self.swap.removeLiquidityImbalance(amounts, self.pool_token.balanceOf(self.alice), chain.time() + 60, {"from": self.alice})
 
     def rule_remove(self, st_pct):
@@ -87,7 +85,6 @@ class StateMachine:
         Remove liquidity from the pool.
         """
         amount = int(10 ** 18 * st_pct)
-        print(amount, self.pool_token.balanceOf(self.alice))
         self.swap.removeLiquidity(amount, [0] * self.n_coins, chain.time() + 60, {"from": self.alice})
 
     def invariant_check_virtual_price(self):
@@ -133,5 +130,5 @@ def test_number_always_go_up(
         coins,
         decimals,
         pool_token,
-        settings={"max_examples": 25, "stateful_step_count": 50},
+        settings={"max_examples": 5, "stateful_step_count": 25},
     )

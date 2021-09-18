@@ -57,18 +57,3 @@ def _mint(acct, coins, amounts):
 def _approve(owner, spender, *coins):
     for coin in set(x for i in coins for x in i):
         coin.approve(spender, 2 ** 256 - 1, {"from": owner})
-
-
-@pytest.fixture(scope="module")
-def _add_base_pool_liquidity(
-    charlie, base_swap, _base_coins, base_pool_data, base_amount, is_forked
-):
-    # private fixture to add liquidity to the metapool
-    if base_pool_data is None:
-        return
-
-    decimals = [i.get("decimals", i.get("wrapped_decimals")) for i in base_pool_data["coins"]]
-    initial_amounts = [10 ** i * base_amount * 2 for i in decimals]
-    _mint(charlie, _base_coins, initial_amounts, [], [], is_forked)
-    _approve(charlie, base_swap, _base_coins)
-    _add_liquidity(charlie, base_swap, _base_coins, initial_amounts)

@@ -18,7 +18,6 @@ ONE_DAY = 24 * 60 * 60
 pytest_plugins = [
     "fixtures.accounts",
     "fixtures.coins",
-    "fixtures.deployments",
     "fixtures.functions",
     "fixtures.setup",
 ]
