@@ -24,6 +24,7 @@ def test_path_independence(
 ):
     swap = [swap_10, swap_100, swap_10_100, swap_100_10][st_A]
     for coin in coins:
+        coin._mint_for_testing(alice, 4 * base_amount * 10 ** coin.decimals())
         coin.approve(swap, 2 ** 256 - 1, {"from": alice})
         coin.approve(swap, 2 ** 256 - 1, {"from": bob})
 
@@ -31,11 +32,15 @@ def test_path_independence(
     swap.setAdminFee(0)
 
     swap.addLiquidity(initial_amounts, 0, chain.time() + 60, {"from": alice})
+    swap.addLiquidity(initial_amounts, 0, chain.time() + 60, {"from": alice})
+    swap.addLiquidity(initial_amounts, 0, chain.time() + 60, {"from": alice})
+    swap.addLiquidity(initial_amounts, 0, chain.time() + 60, {"from": alice})
+    swap.addLiquidity(initial_amounts, 0, chain.time() + 60, {"from": alice})
 
     amount = 10 ** decimals[0]
 
     def price():
-        return swap.calculateSwap(0, 1, amount // 100) / 10**decimals[1]
+        return swap.calculateSwap(0, 1, 10 ** decimals[0]) / 10**decimals[1]
 
     before = price()
     received = swap.swap(0, 1, amount, 0, chain.time() + 60, {"from": bob}).return_value
@@ -52,9 +57,9 @@ def test_path_independence(
     p1 = price()
     received = swap.swap(0, 1, received, 0, chain.time() + 60, {"from": bob}).return_value
     after = price()
-    assert abs(after - before) < 0.00001
+    assert abs(after - before) < 0.0000001
     assert amount >= received
-    print(before, p1, after, received)
+    print(swap.getA(), swap.getA2(), before, p1, after, received)
 
     before = price()
     received = swap.swap(1, 0, amount - (amount // 10), 0, chain.time() + 60, {"from": bob}).return_value
@@ -62,8 +67,8 @@ def test_path_independence(
     p2 = price()
     received = swap.swap(0, 1, received, 0, chain.time() + 60, {"from": bob}).return_value
     after = price()
-    assert abs(after - before) < 0.00001
+    assert abs(after - before) < 0.0000001
     assert amount >= received
-    print(before, p2, after, received)
+    print(swap.getA(), swap.getA2(), before, p2, after, received)
 
-    assert abs(p2 - p1) / 10 ** decimals[0] < 0.00001
+    assert abs(p2 - p1) / 10 ** decimals[0] < 0.0000001

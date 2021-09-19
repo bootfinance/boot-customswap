@@ -24,7 +24,7 @@ Session scoped convenience fixtures providing access to specific unlocked accoun
 
 Module scoped deployment fixtures for stablecoins and pool LP tokens.
 
-* `pool_token`: the LPToken associated with the Swap contract.
+* `liquidity`: the LPToken associated with the Swap contract.
 * `swap`: [`Swap`](../../contracts/pool-templates) deployment for the Swap contract.
 
 ### `functions.py`

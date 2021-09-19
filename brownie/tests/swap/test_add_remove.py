@@ -3,9 +3,9 @@ import pytest
 from brownie import chain
 
 @pytest.mark.itercoins("send", "receive")
-def test_cannot_remove_more_than_added(add_initial_liquidity, bob, swap, coins, pool_token, decimals, n_coins, send, receive):
+def test_cannot_remove_more_than_added(add_initial_liquidity, bob, swap, coins, liquidity, decimals, n_coins, send, receive):
     coins[send].approve(swap, 2 ** 256 - 1, {"from": bob})
-    pool_token.approve(swap, 2 ** 256 - 1, {"from": bob})
+    liquidity.approve(swap, 2 ** 256 - 1, {"from": bob})
 
     amounts = [0] * n_coins
     amounts[send] = 10 ** decimals[send]
@@ -14,7 +14,7 @@ def test_cannot_remove_more_than_added(add_initial_liquidity, bob, swap, coins, 
 
     swap.addLiquidity(amounts, 0, chain.time() + 60, {"from": bob})
 
-    swap.removeLiquidityOneToken(pool_token.balanceOf(bob), receive, 0, chain.time() + 60, {"from": bob})
+    swap.removeLiquidityOneToken(liquidity.balanceOf(bob), receive, 0, chain.time() + 60, {"from": bob})
 
     assert coins[receive].balanceOf(bob) < amounts[send] 
 

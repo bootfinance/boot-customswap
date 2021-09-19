@@ -199,5 +199,5 @@ def swap_100_10(Swap, swap_utils, coins, decimals, admin):
 
 
 @pytest.fixture(scope="module")
-def pool_token(swap, LPToken):
+def liquidity(swap, LPToken):
     return LPToken.at(swap.swapStorage()['lpToken'])

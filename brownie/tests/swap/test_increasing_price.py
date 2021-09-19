@@ -12,14 +12,14 @@ class StateMachine:
 
     st_pct = strategy("decimal", min_value="0.1", max_value="0.5", places=2)
 
-    def __init__(self, admin, alice, swap, coins, decimals, pool_token):
+    def __init__(self, admin, alice, swap, coins, decimals, liquidity):
         self.admin = admin
         self.alice = alice
         self.swap = swap
         self.coins = coins
         self.decimals = decimals
         self.n_coins = len(coins)
-        self.pool_token = pool_token
+        self.liquidity = liquidity
 
     def setup(self):
         # reset the virtual price between each test run
@@ -78,7 +78,7 @@ class StateMachine:
         idx = self._min_max()[1]
         amounts = [0] * self.n_coins
         amounts[idx] = int(10 ** self.decimals[idx] * st_pct)
-        self.swap.removeLiquidityImbalance(amounts, self.pool_token.balanceOf(self.alice), chain.time() + 60, {"from": self.alice})
+        self.swap.removeLiquidityImbalance(amounts, self.liquidity.balanceOf(self.alice), chain.time() + 60, {"from": self.alice})
 
     def rule_remove(self, st_pct):
         """
@@ -111,7 +111,7 @@ def test_number_always_go_up(
     coins,
     decimals,
     base_amount,
-    pool_token
+    liquidity
 ):
     swap.setSwapFee(10 ** 7)
     swap.setAdminFee(0)
@@ -120,7 +120,7 @@ def test_number_always_go_up(
         amount = 10 ** 18 * base_amount
         coin._mint_for_testing(alice, amount, {"from": alice})
 
-    pool_token.approve(swap, 2 ** 256 - 1, {"from": alice})
+    liquidity.approve(swap, 2 ** 256 - 1, {"from": alice})
 
     state_machine(
         StateMachine,
@@ -129,6 +129,6 @@ def test_number_always_go_up(
         swap,
         coins,
         decimals,
-        pool_token,
+        liquidity,
         settings={"max_examples": 5, "stateful_step_count": 25},
     )

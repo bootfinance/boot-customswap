@@ -7,7 +7,7 @@ pytestmark = pytest.mark.usefixtures("mint_alice", "approve_alice")
 
 @pytest.mark.parametrize("min_amount", [0, 2 * 10 ** 18])
 def test_initial(
-    chain, alice, swap, coins, pool_token, min_amount, decimals, n_coins, initial_amounts
+    chain, alice, swap, coins, liquidity, min_amount, decimals, n_coins, initial_amounts
 ):
     amounts = [10 ** i for i in decimals]
 
@@ -17,12 +17,12 @@ def test_initial(
         assert coin.balanceOf(alice) == initial - amount
         assert coin.balanceOf(swap) == amount
 
-    assert pool_token.balanceOf(alice) == n_coins * 10 ** 18
-    assert pool_token.totalSupply() == n_coins * 10 ** 18
+    assert liquidity.balanceOf(alice) == n_coins * 10 ** 18
+    assert liquidity.totalSupply() == n_coins * 10 ** 18
 
 
 @given(idx=strategy('uint', min_value=0, max_value=1))
-def test_initial_liquidity_missing_coin(chain, alice, swap, pool_token, idx, decimals):
+def test_initial_liquidity_missing_coin(chain, alice, swap, liquidity, idx, decimals):
     amounts = [10 ** i for i in decimals]
     amounts[idx] = 0
 
