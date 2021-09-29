@@ -146,8 +146,8 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         // IAllowlist _allowlist
     ) public OwnerPausable() ReentrancyGuard() {
         // Check _pooledTokens and precisions parameter
-        require(_pooledTokens.length == 4, "_pooledTokens.length must be 2 in length");
-        require(decimals.length == 4, "decimals.length must be 2 in length");
+        require(_pooledTokens.length == 4, "_pooledTokens.length must be 4 in length");
+        require(decimals.length == 4, "decimals.length must be 4 in length");
         require(
             _pooledTokens.length == decimals.length,
             "_pooledTokens decimals mismatch"
