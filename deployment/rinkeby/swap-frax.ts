@@ -119,7 +119,8 @@ async function deploySwap(): Promise<void> {
     INITIAL_A2_VALUE,
     SWAP_FEE,
     ADMIN_FEE,
-    WITHDRAW_FEE/*,
+    WITHDRAW_FEE,
+    1/*,
     allowlist.address,*/
   ]
 

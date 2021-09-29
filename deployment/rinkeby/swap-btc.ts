@@ -15,17 +15,17 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 // Swap.sol constructor parameter values
 const TOKEN_ADDRESSES = [
   "0xA7AeF7Fb40019849609531E4cF6f05558Ed688B6", // Rinkeby tbtc
-  "0x5af59f281b3cfd0c12770e4633e6c16dd08ea543", // Rinkeby wbtc
-  "0xA6B983E5657d44acaBd3954ED1B47D0528733c09", // Rinkeby renBTC
-  "0xB77CB1c37E58a7f6bBfC18696545a953756455b0", // Rinkeby sBTC proxy
+  "0x5af59f281b3cfd0c12770e4633e6c16dd08ea543" // Rinkeby wbtc
+  // "0xA6B983E5657d44acaBd3954ED1B47D0528733c09", // Rinkeby renBTC
+  // "0xB77CB1c37E58a7f6bBfC18696545a953756455b0", // Rinkeby sBTC proxy
 ]
 const INITIAL_A_VALUE = 200
 const INITIAL_A2_VALUE = 250
 const SWAP_FEE = 4e6 // 4bps
 const ADMIN_FEE = 0
 const WITHDRAW_FEE = 0
-const BTC_LP_TOKEN_NAME = "Saddle tBTC/WBTC/renBTC/sBTC"
-const BTC_LP_TOKEN_SYMBOL = "saddleTWRenSBTC"
+const BTC_LP_TOKEN_NAME = "Saddle tBTC/WBTC"
+const BTC_LP_TOKEN_SYMBOL = "saddleTWBTC"
 
 // Multisig address to own the btc swap pool
 // List of signers can be found here: https://docs.saddle.finance/faq#who-controls-saddles-admin-keys
@@ -75,14 +75,15 @@ async function deploySwap(): Promise<void> {
   // Deploy Swap with SwapUtils library
   const swapConstructorArgs = [
     TOKEN_ADDRESSES,
-    [18, 8, 8, 18],
+    [18, 8/*, 8, 18*/],
     BTC_LP_TOKEN_NAME,
     BTC_LP_TOKEN_SYMBOL,
     INITIAL_A_VALUE,
     INITIAL_A2_VALUE,
     SWAP_FEE,
     ADMIN_FEE,
-    WITHDRAW_FEE/*,
+    WITHDRAW_FEE,
+    1/*,
     allowlist.address,*/
   ]
 
