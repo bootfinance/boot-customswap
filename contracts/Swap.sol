@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.6.12;
+pragma solidity ^0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
@@ -146,8 +146,8 @@ contract Swap is OwnerPausable, ReentrancyGuard {
         // IAllowlist _allowlist
     ) public OwnerPausable() ReentrancyGuard() {
         // Check _pooledTokens and precisions parameter
-        require(_pooledTokens.length == 2, "_pooledTokens.length must be 2 in length");
-        require(decimals.length == 2, "decimals.length must be 2 in length");
+        require(_pooledTokens.length == 4, "_pooledTokens.length must be 2 in length");
+        require(decimals.length == 4, "decimals.length must be 2 in length");
         require(
             _pooledTokens.length == decimals.length,
             "_pooledTokens decimals mismatch"

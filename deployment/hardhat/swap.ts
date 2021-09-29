@@ -170,7 +170,7 @@ async function deploySwap(): Promise<void> {
   )) as Swap
   await stablecoinSwap.deployed()
 
-  const btcSwap = (await deployContractWithLibraries(
+  /* const btcSwap = (await deployContractWithLibraries(
     owner,
     SwapArtifact,
     { SwapUtils: swapUtils.address },
@@ -189,10 +189,10 @@ async function deploySwap(): Promise<void> {
       SWAP_FEE,
       ADMIN_FEE,
       WITHDRAW_FEE/*,
-      allowlist.address,*/
+      allowlist.address,
     ],
   )) as Swap
-  await btcSwap.deployed()
+  await btcSwap.deployed() */
 
 /*  // update dev limits for stableSwap
   await allowlist.setPoolCap(
@@ -216,13 +216,13 @@ async function deploySwap(): Promise<void> {
 */
   await stablecoinSwap.deployed()
   const stablecoinLpToken = (await stablecoinSwap.swapStorage()).lpToken
-  await btcSwap.deployed()
-  const btcLpToken = (await btcSwap.swapStorage()).lpToken
+ /*  await btcSwap.deployed()
+  const btcLpToken = (await btcSwap.swapStorage()).lpToken */
 
   console.log(`Stablecoin swap address: ${stablecoinSwap.address}`)
   console.log(`Stablecoin swap token address: ${stablecoinLpToken}`)
-  console.log(`Tokenized BTC swap address: ${btcSwap.address}`)
-  console.log(`Tokenized BTC swap token address: ${btcLpToken}`)
+/*   console.log(`Tokenized BTC swap address: ${btcSwap.address}`)
+  console.log(`Tokenized BTC swap token address: ${btcLpToken}`) */
 }
 
 deploySwap().then(() => {
