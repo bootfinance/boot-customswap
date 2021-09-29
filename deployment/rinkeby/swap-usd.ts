@@ -150,12 +150,15 @@ async function deploySwap(): Promise<void> {
 
   // Deploy USD swap
   // Estimated deployment cost = 0.004333332 * gwei
-  const USDSwap = (await deployContract(
+  const USDSwap = (await deployContractWithLibraries(
     deployer,
     SwapArtifact,
+    { SwapUtils: swapUtils.address },
     swapConstructorArgs,
   )) as Swap
   await USDSwap.deployed()
+
+  // console.log("USD swap deployed")
 
   // Set limits for deposits
   // Total supply limit = 150 FRAX
