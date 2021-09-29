@@ -58,23 +58,23 @@ async function deploySwap(): Promise<void> {
   console.log(`USDC token address: ${USDC.address}`)
 
   // Deploy USDC token
-    const TUSD = (await deployContract(
+/*    const TUSD = (await deployContract(
         deployer,
         GenericERC20Artifact,
         ["TUSD Token", "TUSD", "18"],
       )) as GenericERC20
       await TUSD.deployed()
       console.log(`USDC token address: ${TUSD.address}`)
-
+*/
   // Deploy DAI token
-  const DAI = (await deployContract(
+/*  const DAI = (await deployContract(
     deployer,
     GenericERC20Artifact,
     ["DAI Token", "DAI", "18"],
   )) as GenericERC20
   await USDC.deployed()
   console.log(`DAI token address: ${DAI.address}`)
-
+*/
   // Mint 100 M = 1e26 FRAX tokens
   // await fraxToken.mint(deployer.address, String(BigNumber.from(String(1e26))))
   await USDT.mint(deployer.address, BigNumber.from("100000000000000000000000000"))
@@ -82,8 +82,8 @@ async function deploySwap(): Promise<void> {
   // Mint 100 M = 1e26 FXS tokens
   // await fxsToken.mint(deployer.address, String(BigNumber.from(String(1e26))))
   await USDC.mint(deployer.address, BigNumber.from("100000000000000000000000000"))
-  await DAI.mint(deployer.address, BigNumber.from("100000000000000000000000000"))
-  await TUSD.mint(deployer.address, BigNumber.from("100000000000000000000000000"))
+  // await DAI.mint(deployer.address, BigNumber.from("100000000000000000000000000"))
+  // await TUSD.mint(deployer.address, BigNumber.from("100000000000000000000000000"))
 
   // for minting to multiple addresses
   // await asyncForEach([deployer, user1, user2], async (signer) => {
@@ -96,9 +96,9 @@ async function deploySwap(): Promise<void> {
   // Swap.sol constructor parameter values
   const TOKEN_ADDRESSES = [
     USDT.address, 
-    USDC.address, 
+    USDC.address/*, 
     TUSD.address,
-    DAI.address
+    DAI.address*/
   ]
 
   // Deploy Allowlist
@@ -134,7 +134,7 @@ async function deploySwap(): Promise<void> {
   // Deploy Swap with SwapUtils library
   const swapConstructorArgs = [
     TOKEN_ADDRESSES,
-    [18, 18, 18, 18],
+    [18, 18/*, 18, 18*/],
     USD_LP_TOKEN_NAME,
     USD_LP_TOKEN_SYMBOL,
     INITIAL_A_VALUE,
