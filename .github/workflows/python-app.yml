@@ -26,7 +26,7 @@ jobs:
         node-version: 14
     - name: Install dependencies
       run: |
-        cat "DEPLOYER_PRIVATE_KEY_RINKEBY=ecb70cced581478aaa6b1cd1535bdb9d\nINFURA_API_KEY=cf87e94fa23a400dbb50c3640ff1553a\nREPORT_GAS=true" >> .env
+        printf "DEPLOYER_PRIVATE_KEY_RINKEBY=ecb70cced581478aaa6b1cd1535bdb9d\nINFURA_API_KEY=cf87e94fa23a400dbb50c3640ff1553a\nREPORT_GAS=true" >> .env
         npm install
         npm install -g ganache-cli
         python -m pip install --upgrade pip
