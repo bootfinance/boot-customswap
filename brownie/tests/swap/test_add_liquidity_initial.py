@@ -1,8 +1,13 @@
 import brownie
 import pytest
 from brownie.test import given, strategy
+from conftest import MAX_UINT256
 
 pytestmark = pytest.mark.usefixtures("mint_alice", "approve_alice")
+
+
+def test_simple_add(alice, swap):
+    swap.addLiquidity([1e3, 1e3],1e3 , MAX_UINT256, {"from": alice})
 
 
 @pytest.mark.parametrize("min_amount", [0, 2 * 10 ** 18])
