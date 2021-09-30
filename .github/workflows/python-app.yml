@@ -33,6 +33,5 @@ jobs:
         pip install pytest
         pip install -r requirements.txt
     - name: Test with brownie
-      working-directory: ./doesnotexist
       run: |
-        brownie test brownie/tests -n auto --gas 
+        brownie test
