@@ -15,6 +15,7 @@ import { deployContract } from "ethereum-waffle"
 import { deployContractWithLibraries } from "../../test/testUtils"
 import { ethers } from "hardhat"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address"
+var Web3 = require('web3');
 
 const INITIAL_A_VALUE = 200
 const INITIAL_A2_VALUE = 250
@@ -142,7 +143,7 @@ async function deploySwap(): Promise<void> {
     SWAP_FEE,
     ADMIN_FEE,
     WITHDRAW_FEE,
-    1/*
+    Web3.utils.toWei('1', 'ether')/*
     allowlist.address,*/
   ]
 
