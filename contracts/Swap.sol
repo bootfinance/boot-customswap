@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./OwnerPausable.sol";
 import "./SwapUtils.sol";
 import "./MathUtils.sol";
-import "hardhat/console.sol";
+import "./hardhat/console.sol";
 
 /**
  * @title Swap - A StableSwap implementation in solidity.

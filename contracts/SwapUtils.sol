@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./LPToken.sol";
 import "./MathUtils.sol";
-import "hardhat/console.sol";
+import "./hardhat/console.sol";
 
 /**
  * @title SwapUtils library

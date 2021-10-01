@@ -3,7 +3,7 @@
 pragma solidity 0.6.12;
 
 import "../../interfaces/ISwap.sol";
-import "hardhat/console.sol";
+import "../../hardhat/console.sol";
 
 contract TestSwapReturnValues {
     using SafeMath for uint256;
