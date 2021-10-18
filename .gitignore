@@ -9,3 +9,4 @@ todo
 .direnv/
 .envrc
 __pycache__
+.DS_Store
