@@ -1547,57 +1547,57 @@ library SwapUtils {
      * @param futureTargetPrice_ the new target price to ramp towards
      * @param futureTime_ timestamp when the new target price should be reached
      */
-    function rampTargetPrice(
-        TargetPrice storage self,
-        uint256 futureTargetPrice_,
-        uint256 futureTime_
-    ) external returns (uint256) {
-        require(
-            block.timestamp >= self.initialTargetPriceTime.add(1 days),
-            "Wait 1 day before starting ramp"
-        );
-        require(
-            futureTime_ >= block.timestamp.add(MIN_RAMP_TIME),
-            "Insufficient ramp time"
-        );
-        require(
-            futureTargetPrice_ >= 0,
-            "futureTargetPrice_ must be >= 0"
-        );
+    // function rampTargetPrice(
+    //     TargetPrice storage self,
+    //     uint256 futureTargetPrice_,
+    //     uint256 futureTime_
+    // ) external returns (uint256) {
+    //     require(
+    //         block.timestamp >= self.initialTargetPriceTime.add(1 days),
+    //         "Wait 1 day before starting ramp"
+    //     );
+    //     require(
+    //         futureTime_ >= block.timestamp.add(MIN_RAMP_TIME),
+    //         "Insufficient ramp time"
+    //     );
+    //     require(
+    //         futureTargetPrice_ >= 0,
+    //         "futureTargetPrice_ must be >= 0"
+    //     );
 
-        uint256 initialTargetPricePrecise = _getTargetPricePrecise(self);
-        uint256 futureTargetPricePrecise = futureTargetPrice_.mul(TARGET_PRICE_PRECISION);
+    //     uint256 initialTargetPricePrecise = _getTargetPricePrecise(self);
+    //     uint256 futureTargetPricePrecise = futureTargetPrice_.mul(TARGET_PRICE_PRECISION);
 
-        if (futureTargetPricePrecise < initialTargetPricePrecise) {
-            require(
-                futureTargetPricePrecise.mul(MAX_RELATIVE_PRICE_CHANGE).div(WEI_UNIT) >= initialTargetPricePrecise,
-                "futureTargetPrice_ is too small"
-            );
-        } else {
-            require(
-                futureTargetPricePrecise <= initialTargetPricePrecise.mul(MAX_RELATIVE_PRICE_CHANGE).div(WEI_UNIT),
-                "futureTargetPrice_ is too large"
-            );
-        }
+    //     if (futureTargetPricePrecise < initialTargetPricePrecise) {
+    //         require(
+    //             futureTargetPricePrecise.mul(MAX_RELATIVE_PRICE_CHANGE).div(WEI_UNIT) >= initialTargetPricePrecise,
+    //             "futureTargetPrice_ is too small"
+    //         );
+    //     } else {
+    //         require(
+    //             futureTargetPricePrecise <= initialTargetPricePrecise.mul(MAX_RELATIVE_PRICE_CHANGE).div(WEI_UNIT),
+    //             "futureTargetPrice_ is too large"
+    //         );
+    //     }
 
-        self.initialTargetPrice = initialTargetPricePrecise;
-        self.futureTargetPrice = futureTargetPricePrecise;
-        self.initialTargetPriceTime = block.timestamp;
-        self.futureTargetPriceTime = futureTime_;
+    //     self.initialTargetPrice = initialTargetPricePrecise;
+    //     self.futureTargetPrice = futureTargetPricePrecise;
+    //     self.initialTargetPriceTime = block.timestamp;
+    //     self.futureTargetPriceTime = futureTime_;
         
-        // console.log("executing rampTargetPrice() initalTargetPrice: %s", self.initialTargetPrice);
-        // console.log("futureTargetPrice: %s", self.futureTargetPrice);
+    //     // console.log("executing rampTargetPrice() initalTargetPrice: %s", self.initialTargetPrice);
+    //     // console.log("futureTargetPrice: %s", self.futureTargetPrice);
 
-        emit RampTargetPrice(
-            initialTargetPricePrecise,
-            futureTargetPricePrecise,
-            block.timestamp,
-            futureTime_
-        );
+    //     emit RampTargetPrice(
+    //         initialTargetPricePrecise,
+    //         futureTargetPricePrecise,
+    //         block.timestamp,
+    //         futureTime_
+    //     );
 
-        // change token multiplier to reflect new target price
-        return self.originalPrecisionMultipliers[0].mul(initialTargetPricePrecise).div(WEI_UNIT);
-    }
+    //     // change token multiplier to reflect new target price
+    //     return self.originalPrecisionMultipliers[0].mul(initialTargetPricePrecise).div(WEI_UNIT);
+    // }
 
     /**
      * @notice Start ramping up or down A parameter towards given futureA_ and futureTime_
@@ -1607,51 +1607,51 @@ library SwapUtils {
      * @param futureA_ the new A to ramp towards
      * @param futureTime_ timestamp when the new A should be reached
      */
-    function rampA(
-        Swap storage self,
-        uint256 futureA_,
-        uint256 futureTime_
-    ) external {
-        require(
-            block.timestamp >= self.initialATime.add(1 days),
-            "Wait 1 day before starting ramp"
-        );
-        require(
-            futureTime_ >= block.timestamp.add(MIN_RAMP_TIME),
-            "Insufficient ramp time"
-        );
-        require(
-            futureA_ >= 0 && futureA_ <= MAX_A,
-            "futureA_ must be >= 0 and <= MAX_A"
-        );
+    // function rampA(
+    //     Swap storage self,
+    //     uint256 futureA_,
+    //     uint256 futureTime_
+    // ) external {
+    //     require(
+    //         block.timestamp >= self.initialATime.add(1 days),
+    //         "Wait 1 day before starting ramp"
+    //     );
+    //     require(
+    //         futureTime_ >= block.timestamp.add(MIN_RAMP_TIME),
+    //         "Insufficient ramp time"
+    //     );
+    //     require(
+    //         futureA_ >= 0 && futureA_ <= MAX_A,
+    //         "futureA_ must be >= 0 and <= MAX_A"
+    //     );
 
-        uint256 initialAPrecise = _getAPrecise(self);
-        uint256 futureAPrecise = futureA_.mul(A_PRECISION);
+    //     uint256 initialAPrecise = _getAPrecise(self);
+    //     uint256 futureAPrecise = futureA_.mul(A_PRECISION);
 
-        if (futureAPrecise < initialAPrecise) {
-            require(
-                futureAPrecise.mul(MAX_A_CHANGE) >= initialAPrecise,
-                "futureA_ is too small"
-            );
-        } else {
-            require(
-                futureAPrecise <= initialAPrecise.mul(MAX_A_CHANGE),
-                "futureA_ is too large"
-            );
-        }
+    //     if (futureAPrecise < initialAPrecise) {
+    //         require(
+    //             futureAPrecise.mul(MAX_A_CHANGE) >= initialAPrecise,
+    //             "futureA_ is too small"
+    //         );
+    //     } else {
+    //         require(
+    //             futureAPrecise <= initialAPrecise.mul(MAX_A_CHANGE),
+    //             "futureA_ is too large"
+    //         );
+    //     }
 
-        self.initialA = initialAPrecise;
-        self.futureA = futureAPrecise;
-        self.initialATime = block.timestamp;
-        self.futureATime = futureTime_;
+    //     self.initialA = initialAPrecise;
+    //     self.futureA = futureAPrecise;
+    //     self.initialATime = block.timestamp;
+    //     self.futureATime = futureTime_;
 
-        emit RampA(
-            initialAPrecise,
-            futureAPrecise,
-            block.timestamp,
-            futureTime_
-        );
-    }
+    //     emit RampA(
+    //         initialAPrecise,
+    //         futureAPrecise,
+    //         block.timestamp,
+    //         futureTime_
+    //     );
+    // }
 
     /**
      * @notice Start ramping up or down A2 parameter towards given futureA2_ and futureTime_
@@ -1661,103 +1661,103 @@ library SwapUtils {
      * @param futureA2_ the new A2 to ramp towards
      * @param futureTime_ timestamp when the new A2 should be reached
      */
-    function rampA2(
-        Swap storage self,
-        uint256 futureA2_,
-        uint256 futureTime_
-    ) external {
-        require(
-            block.timestamp >= self.initialA2Time.add(1 days),
-            "Wait 1 day before starting ramp"
-        );
-        require(
-            futureTime_ >= block.timestamp.add(MIN_RAMP_TIME),
-            "Insufficient ramp time"
-        );
-        require(
-            futureA2_ >= 0 && futureA2_ <= MAX_A,
-            "futureA2_ must be >= 0 and <= MAX_A"
-        );
+    // function rampA2(
+    //     Swap storage self,
+    //     uint256 futureA2_,
+    //     uint256 futureTime_
+    // ) external {
+    //     require(
+    //         block.timestamp >= self.initialA2Time.add(1 days),
+    //         "Wait 1 day before starting ramp"
+    //     );
+    //     require(
+    //         futureTime_ >= block.timestamp.add(MIN_RAMP_TIME),
+    //         "Insufficient ramp time"
+    //     );
+    //     require(
+    //         futureA2_ >= 0 && futureA2_ <= MAX_A,
+    //         "futureA2_ must be >= 0 and <= MAX_A"
+    //     );
 
-        uint256 initialA2Precise = _getA2Precise(self);
-        uint256 futureA2Precise = futureA2_.mul(A_PRECISION);
+    //     uint256 initialA2Precise = _getA2Precise(self);
+    //     uint256 futureA2Precise = futureA2_.mul(A_PRECISION);
 
-        if (futureA2Precise < initialA2Precise) {
-            require(
-                futureA2Precise.mul(MAX_A_CHANGE) >= initialA2Precise,
-                "futureA2_ is too small"
-            );
-        } else {
-            require(
-                futureA2Precise <= initialA2Precise.mul(MAX_A_CHANGE),
-                "futureA2_ is too large"
-            );
-        }
+    //     if (futureA2Precise < initialA2Precise) {
+    //         require(
+    //             futureA2Precise.mul(MAX_A_CHANGE) >= initialA2Precise,
+    //             "futureA2_ is too small"
+    //         );
+    //     } else {
+    //         require(
+    //             futureA2Precise <= initialA2Precise.mul(MAX_A_CHANGE),
+    //             "futureA2_ is too large"
+    //         );
+    //     }
 
-        self.initialA2 = initialA2Precise;
-        self.futureA2 = futureA2Precise;
-        self.initialA2Time = block.timestamp;
-        self.futureA2Time = futureTime_;
+    //     self.initialA2 = initialA2Precise;
+    //     self.futureA2 = futureA2Precise;
+    //     self.initialA2Time = block.timestamp;
+    //     self.futureA2Time = futureTime_;
 
-        emit RampA2(
-            initialA2Precise,
-            futureA2Precise,
-            block.timestamp,
-            futureTime_
-        );
-    }
+    //     emit RampA2(
+    //         initialA2Precise,
+    //         futureA2Precise,
+    //         block.timestamp,
+    //         futureTime_
+    //     );
+    // }
 
     /**
      * @notice Stops ramping Target price immediately. Once this function is called, rampTargetPrce()
      * cannot be called for another 24 hours
      * @param self TargetPrice struct to update
      */
-    function stopRampTargetPrice(TargetPrice storage self) external returns (uint256) {
-        require(self.futureTargetPriceTime > block.timestamp, "Ramp is already stopped");
-        uint256 currentTargetPrice = _getTargetPricePrecise(self);
+    // function stopRampTargetPrice(TargetPrice storage self) external returns (uint256) {
+    //     require(self.futureTargetPriceTime > block.timestamp, "Ramp is already stopped");
+    //     uint256 currentTargetPrice = _getTargetPricePrecise(self);
 
-        self.initialTargetPrice = currentTargetPrice;
-        self.futureTargetPrice = currentTargetPrice;
-        self.initialTargetPriceTime = block.timestamp;
-        self.futureTargetPriceTime = block.timestamp;
+    //     self.initialTargetPrice = currentTargetPrice;
+    //     self.futureTargetPrice = currentTargetPrice;
+    //     self.initialTargetPriceTime = block.timestamp;
+    //     self.futureTargetPriceTime = block.timestamp;
 
-        emit StopRampTargetPrice(currentTargetPrice, block.timestamp);
+    //     emit StopRampTargetPrice(currentTargetPrice, block.timestamp);
 
-        // change token multiplier to reflect new target price
-        return self.originalPrecisionMultipliers[0].mul(currentTargetPrice).div(WEI_UNIT);
-    }
+    //     // change token multiplier to reflect new target price
+    //     return self.originalPrecisionMultipliers[0].mul(currentTargetPrice).div(WEI_UNIT);
+    // }
 
     /**
      * @notice Stops ramping A immediately. Once this function is called, rampA()
      * cannot be called for another 24 hours
      * @param self Swap struct to update
      */
-    function stopRampA(Swap storage self) external {
-        require(self.futureATime > block.timestamp, "Ramp is already stopped");
-        uint256 currentA = _getAPrecise(self);
+    // function stopRampA(Swap storage self) external {
+    //     require(self.futureATime > block.timestamp, "Ramp is already stopped");
+    //     uint256 currentA = _getAPrecise(self);
 
-        self.initialA = currentA;
-        self.futureA = currentA;
-        self.initialATime = block.timestamp;
-        self.futureATime = block.timestamp;
+    //     self.initialA = currentA;
+    //     self.futureA = currentA;
+    //     self.initialATime = block.timestamp;
+    //     self.futureATime = block.timestamp;
 
-        emit StopRampA(currentA, block.timestamp);
-    }
+    //     emit StopRampA(currentA, block.timestamp);
+    // }
 
     /**
      * @notice Stops ramping A2 immediately. Once this function is called, rampA2()
      * cannot be called for another 24 hours
      * @param self Swap struct to update
      */
-    function stopRampA2(Swap storage self) external {
-        require(self.futureA2Time > block.timestamp, "Ramp is already stopped");
-        uint256 currentA2 = _getA2Precise(self);
+    // function stopRampA2(Swap storage self) external {
+    //     require(self.futureA2Time > block.timestamp, "Ramp is already stopped");
+    //     uint256 currentA2 = _getA2Precise(self);
 
-        self.initialA2 = currentA2;
-        self.futureA2 = currentA2;
-        self.initialA2Time = block.timestamp;
-        self.futureA2Time = block.timestamp;
+    //     self.initialA2 = currentA2;
+    //     self.futureA2 = currentA2;
+    //     self.initialA2Time = block.timestamp;
+    //     self.futureA2Time = block.timestamp;
 
-        emit StopRampA2(currentA2, block.timestamp);
-    }
+    //     emit StopRampA2(currentA2, block.timestamp);
+    // }
 }

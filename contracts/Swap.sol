@@ -631,9 +631,9 @@ contract Swap is OwnerPausable, ReentrancyGuard {
      * @param futureTargetPrice the new target price to ramp towards
      * @param futureTime timestamp when the new target price should be reached
      */
-    function rampTargetPrice(uint256 futureTargetPrice, uint256 futureTime) external onlyOwner {
-        swapStorage.tokenPrecisionMultipliers[0] = targetPriceStorage.rampTargetPrice(futureTargetPrice, futureTime);
-    }
+    // function rampTargetPrice(uint256 futureTargetPrice, uint256 futureTime) external onlyOwner {
+    //     swapStorage.tokenPrecisionMultipliers[0] = targetPriceStorage.rampTargetPrice(futureTargetPrice, futureTime);
+    // }
 
 
     /**
@@ -643,9 +643,9 @@ contract Swap is OwnerPausable, ReentrancyGuard {
      * @param futureA the new A to ramp towards
      * @param futureTime timestamp when the new A should be reached
      */
-    function rampA(uint256 futureA, uint256 futureTime) external onlyOwner {
-        swapStorage.rampA(futureA, futureTime);
-    }
+    // function rampA(uint256 futureA, uint256 futureTime) external onlyOwner {
+    //     swapStorage.rampA(futureA, futureTime);
+    // }
 
     /**
      * @notice Start ramping up or down A2 parameter towards given futureA and futureTime
@@ -654,31 +654,31 @@ contract Swap is OwnerPausable, ReentrancyGuard {
      * @param futureA the new A2 to ramp towards
      * @param futureTime timestamp when the new A2 should be reached
      */
-    function rampA2(uint256 futureA, uint256 futureTime) external onlyOwner {
-        swapStorage.rampA2(futureA, futureTime);
-    }
+    // function rampA2(uint256 futureA, uint256 futureTime) external onlyOwner {
+    //     swapStorage.rampA2(futureA, futureTime);
+    // }
 
     /**
      * @notice Stop ramping Target Price immediately. Reverts if ramp Target Price is already stopped.
      */
-    function stopRampTargetPrice() external onlyOwner {
-        swapStorage.tokenPrecisionMultipliers[0] = targetPriceStorage.stopRampTargetPrice();
-    }
+    // function stopRampTargetPrice() external onlyOwner {
+    //     swapStorage.tokenPrecisionMultipliers[0] = targetPriceStorage.stopRampTargetPrice();
+    // }
 
 
     /**
      * @notice Stop ramping A immediately. Reverts if ramp A is already stopped.
      */
-    function stopRampA() external onlyOwner {
-        swapStorage.stopRampA();
-    }
+    // function stopRampA() external onlyOwner {
+    //     swapStorage.stopRampA();
+    // }
 
     /**
      * @notice Stop ramping A2 immediately. Reverts if ramp A2 is already stopped.
      */
-    function stopRampA2() external onlyOwner {
-        swapStorage.stopRampA2();
-    }
+    // function stopRampA2() external onlyOwner {
+    //     swapStorage.stopRampA2();
+    // }
 
     // /**
     //  * @notice Disables the guarded launch phase, removing any limits on deposit amounts and addresses
